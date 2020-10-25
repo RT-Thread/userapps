@@ -1,0 +1,20 @@
+import os
+from building import * 
+
+# get current dir path
+cwd = GetCurrentDir()
+
+# init src and inc vars
+src = []
+inc = []
+
+# add getparse common include
+inc = inc + [cwd]
+
+# add getparse basic code
+src = src + Glob('./*.c')
+
+# add group to IDE project
+group = DefineGroup('optparse', src, depend = [''], CPPPATH = inc)
+
+Return('group')

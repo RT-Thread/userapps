@@ -1,0 +1,63 @@
+choice
+    prompt "CPU Arch"
+    default CORTEX_A
+
+    config CORTEX_A
+        bool "ARM Cortex-A"
+
+    config CORTEX_M
+        bool "ARM Cortex-M"
+endchoice
+
+config ARCH
+    string
+    default "Cortex-A" if CORTEX_A
+    default "Cortex-M" if CORTEX_M
+    default "Cortex-A"
+
+choice
+    prompt "Compiler"
+    default GNU_GCC
+
+    config GNU_GCC
+        bool "GNU GCC"
+
+    config GNU_GCC_MUSL
+        bool "GNU GCC with musl libc"
+    
+    config GNU_GCC_NEWLIB
+        bool "GNU GCC with newlib libc"
+endchoice
+
+config Toolchain
+    string
+    default "gcc" if GNU_GCC
+    default "gcc_musl" if GNU_GCC_MUSL
+    default "gcc_newlib" if GNU_GCC_NEWLIB
+    default "gcc"
+
+config EXEC_PATH
+    string "Toolchain Path"
+    default "/opt/arm-none-eabi-elf/bin"
+
+config CUSTOM_PREFIX
+    bool "Using specific prefix of toolchain"
+    default n
+
+if CUSTOM_PREFIX
+    config PREFIX
+        string "Prefix of toolchain"
+        default "arm-none-eabi-"
+endif
+
+if !CUSTOM_PREFIX
+    config PREFIX
+        string
+        default "arm-none-eabi-" if GNU_GCC_NEWLIB
+        default "arm-linux-musleabi-" if GNU_GCC_MUSL
+        default "arm-none-eabi-"
+endif
+
+config TARGET_FILE
+    string
+    default ""

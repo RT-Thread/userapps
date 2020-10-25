@@ -1,0 +1,3 @@
+from building import *
+
+BuildApplication('ping', 'SConscript', usr_root = '../..')

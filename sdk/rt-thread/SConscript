@@ -1,0 +1,17 @@
+from building import *
+
+cwd        = GetCurrentDir()
+src        = []
+CPPPATH    = [cwd + '/include', 
+    cwd + '/components/dfs', 
+    cwd + '/components/drivers', 
+    cwd + '/components/finsh', 
+    cwd + '/components/net']
+LIBS       = ['rtthread']
+LIBPATH    = [cwd + '/lib']
+
+group = DefineGroup('sdk', src, depend = [''], CPPPATH = CPPPATH, 
+        LIBPATH = LIBPATH, LIBS = LIBS)
+
+Return('group')
+
