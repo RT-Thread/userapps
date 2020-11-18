@@ -55,6 +55,7 @@
 #define RT_USING_DFS
 #define DFS_USING_WORKDIR
 #define RT_USING_DFS_DEVFS
+#define DFS_FD_MAX  32
 
 /* Device Drivers */
 
