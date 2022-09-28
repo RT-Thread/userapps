@@ -26,9 +26,7 @@
 #include <wn_module.h>
 #include <wn_utils.h>
 
-#ifdef RT_USING_DFS
-#include <dfs_posix.h>
-#endif
+#include <dirent.h>
 
 #ifdef WEBNET_USING_INDEX
 
@@ -56,7 +54,7 @@ int webnet_module_dirindex(struct webnet_session* session, int event)
         {
             return WEBNET_MODULE_CONTINUE;
         }
-        
+
         dir = opendir(request->path);
         if (dir != RT_NULL)
         {
@@ -99,11 +97,11 @@ int webnet_module_dirindex(struct webnet_session* session, int event)
                 rt_sprintf(fullpath, "%s/%s", sub_path, dirent->d_name);
                 if ( s.st_mode & S_IFDIR )
                 {
-                    webnet_session_printf(session, "<a href=\"%s/\">%s/</a>\n", fullpath, dirent->d_name);
+                    webnet_session_printf(session, "<a href=\"%s/\">%s/</a>\n", dirent->d_name, dirent->d_name);
                 }
                 else
                 {
-                    webnet_session_printf(session, "<a href=\"%s\">%s</a>\t\t\t\t\t%d\n", fullpath, dirent->d_name, s.st_size);
+                    webnet_session_printf(session, "<a href=\"%s\">%s</a>\t\t\t\t\t%d\n", dirent->d_name, dirent->d_name, s.st_size);
                 }
             }
             while (dirent != RT_NULL);

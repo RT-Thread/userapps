@@ -1,0 +1,63 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        // {
+        //     "label": "clean",
+        //     "type": "shell",
+        //     "command": "pushd ${config:RT-Thread Smart.SDK ROOT}\n./smart-env.bat\npopd\nscons -c",
+        //     "args":[
+
+        //     ]
+        // },
+        //  {
+        //     "label": "build",
+        //     "type": "shell",
+        //     "command": "pushd ${config:RT-Thread Smart.SDK ROOT}\n./smart-env.bat\npopd\nscons",
+        //     "args":[
+
+        //     ],
+        //     "dependsOn":["clean"]
+        // },
+         {
+            "label": "udb-tcp-connect",
+            "type": "shell",
+            "command": "${workspaceFolder}/../../../tools/udb-tools/windows/udb",
+            "args":[
+                "tcp",
+                "${config:RT-Thread Smart.Server IP}",
+                "5555"
+            ],
+            // "dependsOn":["build"]
+        },
+         {
+            "label": "udb-devices",
+            "type": "shell",
+            "command": "${workspaceFolder}/../../../tools/udb-tools/windows/udb",
+            "args":[
+                "devices"
+            ],
+            "dependsOn":["udb-tcp-connect"]
+        },
+         {
+            "label": "udb-push",
+            "type": "shell",
+            "command": "${workspaceFolder}/../../../tools/udb-tools/windows/udb",
+            "args":[
+                "push",
+                "${config:RT-Thread Smart.Program}",
+                "${config:RT-Thread Smart.Target Path}/${config:RT-Thread Smart.Program}"
+            ],
+            "dependsOn":["udb-devices"]
+        },
+         {
+            "label": "dbg",
+            "type": "shell",
+            "command": "${workspaceFolder}/../../../tools/udb-tools/windows/udb",
+            "args":[
+                "shell",
+                "'dbg ${config:RT-Thread Smart.Target Path}/${config:RT-Thread Smart.Program} --port 1234'"
+            ],
+            "dependsOn":["udb-push"]
+        }
+    ]
+}

@@ -37,7 +37,7 @@ int main(int argc, char **argv)
         rt_channel_recv(pong_ch, &msg_text);
 
 #ifdef RT_USING_USERSPACE
-        shmid = (int)msg_text.u.d;
+        shmid = (int)(size_t)msg_text.u.d;
         if (shmid < 0 || !(str = (char *)lwp_shmat(shmid, NULL)))
         {
             msg_text.u.d = (void *)-1;
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
         /* prepare the reply message */
         printf("Pong: reply count = %d\n", i);
         msg_text.type = RT_CHANNEL_RAW;
-        msg_text.u.d = (void *)i;
+        msg_text.u.d = (void *)(size_t)i;
         rt_channel_reply(pong_ch, &msg_text);
     }
 

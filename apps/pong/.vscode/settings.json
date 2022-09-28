@@ -1,0 +1,5 @@
+{
+    "RT-Thread Smart.Program": "pong.elf",
+    "RT-Thread Smart.Target Path": "/root/bin/",
+    "RT-Thread Smart.SDK ROOT": "../../.."
+}

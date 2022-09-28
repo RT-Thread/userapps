@@ -5,10 +5,11 @@
 /* RT-Thread Project Configuration */
 
 /* RT-Thread Kernel */
+#define RT_USING_LWP
 #define RT_NAME_MAX 8
-#define RT_ALIGN_SIZE 4
+#define RT_ALIGN_SIZE 8
 #define RT_THREAD_PRIORITY_MAX 256
-#define RT_TICK_PER_SECOND 100
+#define RT_TICK_PER_SECOND 1000
 #define RT_DEBUG
 #define RT_DEBUG_COLOR
 
@@ -18,7 +19,7 @@
 #define RT_USING_EVENT
 #define RT_USING_MAILBOX
 #define RT_USING_MESSAGEQUEUE
-#define RT_USING_SIGNALS
+//#define RT_USING_SIGNALS
 
 /* Memory Management */
 #define RT_USING_MEMPOOL
@@ -69,6 +70,7 @@
 #define RT_USING_POSIX
 
 /* Network */
+#define RT_USING_NETDEV
 
 /* Socket abstraction layer */
 

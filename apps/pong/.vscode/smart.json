@@ -1,0 +1,42 @@
+{
+    "env": {
+        "windows": {
+            "VENV_MODE": true,
+            "PATH": "%PATH%;%RTT_EXEC_PATH%"
+        },
+        "linux": {
+            "PATH": "$PATH:$RTT_EXEC_PATH"
+        }
+    },
+    "statusBarItem": {
+        "build": {
+            "icon": "$(zap)",
+            "enable": true,
+            "commands": [
+                "scons"
+            ],
+            "label": "编译",
+            "tooltip": "编译 RT-Thread Smart 工程"
+        },
+        "clean": {
+            "icon": "$(clear-all)",
+            "enable": true,
+            "commands": [
+                "scons -c"
+            ],
+            "label": "清理",
+            "tooltip": "清理 RT-Thread Smart 工程"
+        },
+        "download": {
+            "icon": "$(cloud-download)",
+            "enable": true,
+            "commands": [
+                "udb tcp ${SERVER_IP} 5555",
+                "udb devices",
+                "udb push ${EXECUTABLE_PROGRAM} ${TARGET_PATH}"
+            ],
+            "label": "下载",
+            "tooltip": "下载 RT-Thread Smart 工程"
+        }
+    }
+}

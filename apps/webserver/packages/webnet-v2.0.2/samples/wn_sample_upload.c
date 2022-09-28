@@ -119,7 +119,7 @@ static int upload_close(struct webnet_session* session)
 {
     int fd;
 
-    fd = (int)webnet_upload_get_userdata(session);
+    fd = (int)(size_t)webnet_upload_get_userdata(session);
     if (fd < 0) return 0;
 
     close(fd);
@@ -131,7 +131,7 @@ static int upload_write(struct webnet_session* session, const void* data, rt_siz
 {
     int fd;
 
-    fd = (int)webnet_upload_get_userdata(session);
+    fd = (int)(size_t)webnet_upload_get_userdata(session);
     if (fd < 0) return 0;
 
     rt_kprintf("write: length %d\n", length);

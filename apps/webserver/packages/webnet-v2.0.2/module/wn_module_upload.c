@@ -78,7 +78,7 @@ struct webnet_module_upload_session
     const struct webnet_module_upload_entry* entry;
 
     /* user data */
-    rt_uint32_t user_data;
+    size_t user_data;
 };
 
 static int str_begin_with_strs(const char* str, int num, ...)
@@ -221,7 +221,7 @@ static char* _webnet_module_upload_parse_header(struct webnet_session* session, 
         upload_session->content_type = RT_NULL;
     }
 
-    while ((rt_uint32_t)ptr - (rt_uint32_t)buffer < length)
+    while ((size_t)ptr - (size_t)buffer < length)
     {
         /* handle Content-Disposition: */
         if (str_begin_with(ptr, CONTENT_DISPOSITION_STRING))
@@ -402,7 +402,7 @@ static void _webnet_module_upload_handle(struct webnet_session* session, int eve
     int length;
     char *ptr, *end_ptr;
     char *upload_buffer;
-    rt_uint32_t chunk_size;
+    size_t chunk_size;
     struct webnet_module_upload_session *upload_session;
 
     if (event != WEBNET_EVENT_READ) return;
@@ -469,21 +469,21 @@ static void _webnet_module_upload_handle(struct webnet_session* session, int eve
         }
 
         ptr = _webnet_module_upload_parse_header(session, upload_buffer,
-                (rt_uint32_t)end_ptr - (rt_uint32_t)upload_buffer);
+                (size_t)end_ptr - (size_t)upload_buffer);
         if (ptr == RT_NULL)
         {
             /* not begin with a boundary */
             ptr = _next_possible_boundary(session, upload_buffer,
-                                          (rt_uint32_t)end_ptr - (rt_uint32_t)upload_buffer);
+                                          (size_t)end_ptr - (size_t)upload_buffer);
             if (ptr == RT_NULL)
             {
                 /* all are the data section */
-                _handle_section(session, upload_buffer, (rt_uint32_t)end_ptr - (rt_uint32_t)upload_buffer);
+                _handle_section(session, upload_buffer, (size_t)end_ptr - (size_t)upload_buffer);
                 upload_buffer = end_ptr;
             }
             else
             {
-                chunk_size = (rt_uint32_t)ptr - (rt_uint32_t)upload_buffer;
+                chunk_size = (size_t)ptr - (size_t)upload_buffer;
                 _handle_section(session, upload_buffer, chunk_size);
                 upload_buffer += chunk_size;
             }
@@ -513,16 +513,16 @@ static void _webnet_module_upload_handle(struct webnet_session* session, int eve
 
             upload_buffer = ptr;
             ptr = _next_possible_boundary(session, upload_buffer,
-                                          (rt_uint32_t)end_ptr - (rt_uint32_t)upload_buffer);
+                                          (size_t)end_ptr - (size_t)upload_buffer);
             if (ptr == RT_NULL)
             {
                 /* all are the data section */
-                _handle_section(session, upload_buffer, (rt_uint32_t)end_ptr - (rt_uint32_t)upload_buffer);
+                _handle_section(session, upload_buffer, (size_t)end_ptr - (size_t)upload_buffer);
                 upload_buffer = end_ptr;
             }
             else
             {
-                chunk_size = (rt_uint32_t)ptr - (rt_uint32_t)upload_buffer;
+                chunk_size = (size_t)ptr - (size_t)upload_buffer;
                 _handle_section(session, upload_buffer, chunk_size);
                 upload_buffer += chunk_size;
             }
@@ -556,7 +556,7 @@ static void _webnet_module_upload_close(struct webnet_session* session)
         wn_free(upload_session->boundary);
     if (upload_session->entry != RT_NULL)
     {
-        rt_uint32_t index;
+        size_t index;
         for (index = 0; index < upload_session->name_entries_count; index ++)
         {
             if (upload_session->name_entries[index].value != RT_NULL)
@@ -584,7 +584,7 @@ static const struct webnet_session_ops _upload_ops =
 int webnet_module_upload_open(struct webnet_session* session)
 {
     char* boundary;
-    rt_uint32_t index, length;
+    size_t index, length;
     const struct webnet_module_upload_entry *entry = RT_NULL;
     struct webnet_module_upload_session *upload_session;
 
@@ -634,7 +634,7 @@ int webnet_module_upload_open(struct webnet_session* session)
     upload_session->user_data = 0;
 
     /* add this upload session into webnet session */
-    session->user_data = (rt_uint32_t) upload_session;
+    session->user_data = (size_t) upload_session;
     /* set webnet session operations */
     session->session_ops = &_upload_ops;
 
@@ -702,7 +702,7 @@ RTM_EXPORT(webnet_upload_get_content_type);
 
 const char* webnet_upload_get_nameentry(struct webnet_session* session, const char* name)
 {
-    rt_uint32_t index;
+    size_t index;
     struct webnet_module_upload_session *upload_session;
 
     /* get upload session */

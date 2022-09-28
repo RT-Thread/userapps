@@ -35,6 +35,7 @@ struct webnet_mime_entry
 static const struct webnet_mime_entry mime_tables[] =
 {
     { "any",	"application/binary" }, /* default. */
+    { "bmp",	"image/bmp" },
     { "html",	"text/html" },
     { "htm",	"text/html" },
     { "css",	"text/css" },
@@ -44,6 +45,7 @@ static const struct webnet_mime_entry mime_tables[] =
     { "png",	"image/png" },
     { "jpeg",	"image/jpeg" },
     { "jpg",	"image/jpeg" },
+    { "json",	"application/json" },
     { "svg",	"image/svg+xml" },
     { "avi",	"video/x-msvideo" },
     { "mp3",	"audio/mpeg" },

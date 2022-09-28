@@ -88,14 +88,14 @@ int main(int argc, char **argv)
             printf("Ping: fail to prepare the ping message.\n");
             continue;
         }
-        ch_msg.u.d = (void *)shmid;
+        ch_msg.u.d = (void *)(size_t)shmid;
 #else
         ch_msg.u.d = ping;
 #endif
 
         printf("Ping: send %s\n", ping);
         rt_channel_send_recv(pong_ch, &ch_msg, &ch_msg_ret);
-        printf("Ping: receive the reply %d\n", (int) ch_msg_ret.u.d);
+        printf("Ping: receive the reply %d\n", (int)(size_t) ch_msg_ret.u.d);
 
 #ifdef RT_USING_USERSPACE
         lwp_shmrm(shmid);

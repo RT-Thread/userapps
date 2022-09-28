@@ -1,9 +1,6 @@
 *.pyc
 *.map
 *.dblite
-*.dbsqlite
-pkgs.json
-pkgs_error.json
 *.elf
 *.bin
 *.hex
