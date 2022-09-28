@@ -1,15 +1,13 @@
 *.pyc
 *.map
 *.dblite
-*.dbsqlite
-pkgs.json
-pkgs_error.json
 *.elf
 *.bin
 *.hex
 *.axf
 *.exe
 *.pdb
+*.pyc
 *.idb
 *.ilk
 *.old
@@ -24,3 +22,4 @@ build
 *.i
 *.d
 GPUCache
+/tools/gnu_gcc

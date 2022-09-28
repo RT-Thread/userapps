@@ -686,7 +686,7 @@ void webnet_request_parse(struct webnet_request* request, char* buffer, int leng
                     /* end of http request */
                     request->result_code = 200;
                     session->buffer_offset = (rt_uint16_t)(length -
-                                                      ((rt_uint32_t)request->query - (rt_uint32_t)buffer));
+                                                      ((size_t)request->query - (size_t)buffer));
                     /* move the buffer to the session */
                     if (session->buffer_offset > 0)
                     {
@@ -718,7 +718,7 @@ void webnet_request_parse(struct webnet_request* request, char* buffer, int leng
                 }
 
                 /* get the length of already read bytes */
-                read_length = (int)(length - ((rt_uint32_t)request->query - (rt_uint32_t)buffer));
+                read_length = (int)(length - ((size_t)request->query - (size_t)buffer));
                 if (read_length > 0)
                 {
                     if (read_length > request->content_length) read_length = request->content_length;

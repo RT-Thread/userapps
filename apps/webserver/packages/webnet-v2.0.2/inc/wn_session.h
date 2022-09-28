@@ -84,7 +84,7 @@ struct webnet_session
 
 	rt_uint32_t  session_event_mask;
     const struct webnet_session_ops* session_ops;
-    rt_uint32_t user_data;
+    size_t user_data;
 };
 
 struct webnet_session* webnet_session_create(int listenfd);

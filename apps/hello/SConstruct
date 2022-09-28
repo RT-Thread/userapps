@@ -1,0 +1,13 @@
+import os
+import sys
+
+# add building.py path
+tools_path = os.path.normpath(os.getcwd() + '/../..')
+
+if os.path.exists(os.path.dirname(tools_path) + '/tools'):
+    tools_path = os.path.dirname(tools_path)
+
+sys.path = sys.path + [os.path.join(tools_path, 'tools')]
+from building import *
+
+BuildApplication('hello', 'SConscript', usr_root = '../../..')

@@ -11,11 +11,11 @@
 #define PKG_USING_WEBNET
 #define WEBNET_PORT 80
 #define WEBNET_CONN_MAX 16
-#define WEBNET_ROOT "/webnet"
+#define WEBNET_ROOT "/"
 
 /* Select supported modules */
 
-#define WEBNET_USING_LOG
+// #define WEBNET_USING_LOG
 #define WEBNET_USING_AUTH
 #define WEBNET_USING_CGI
 #define WEBNET_USING_ASP

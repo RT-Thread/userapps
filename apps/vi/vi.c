@@ -183,6 +183,7 @@
 //usage:     "\n	-H	List available features"
 
 #include "vi_utils.h"
+#include <termios.h>
 
 /* This struct is deliberately not defined. */
 /* See docs/keep_data_small.txt */
@@ -366,9 +367,7 @@ struct globals {
 #if ENABLE_FEATURE_VI_USE_SIGNALS
 	sigjmp_buf restart;     // catch_sig()
 #endif
-#if 0
 	struct termios term_orig, term_vi; // remember what the cooked mode was
-#endif
 #if ENABLE_FEATURE_VI_COLON
 	char *initial_cmds[3];  // currently 2 entries, NULL terminated
 #endif
@@ -2772,7 +2771,6 @@ static char *swap_context(char *p) // goto new context for '' command make this 
 //----- Set terminal attributes --------------------------------
 static void rawmode(void)
 {
-#if 0
 	tcgetattr(0, &term_orig);
 	term_vi = term_orig;
 	term_vi.c_lflag &= (~ICANON & ~ECHO);	// leave ISIG on - allow intr's
@@ -2781,18 +2779,13 @@ static void rawmode(void)
 	term_vi.c_cc[VMIN] = 1;
 	term_vi.c_cc[VTIME] = 0;
 	erase_char = term_vi.c_cc[VERASE];
-	tcsetattr_stdin_TCSANOW(&term_vi);
-#else
-	erase_char = 0177;
-#endif
+	tcsetattr(0, 0, &term_vi);
 }
 
 static void cookmode(void)
 {
 	fflush_all();
-#if 0
-	tcsetattr_stdin_TCSANOW(&term_orig);
-#endif
+	tcsetattr(0, 0, &term_orig);
 }
 
 #if ENABLE_FEATURE_VI_USE_SIGNALS

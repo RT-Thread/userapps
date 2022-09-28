@@ -1,4 +1,5 @@
 from building import *
+Import('Env')
 
 cwd        = GetCurrentDir()
 src        = []
@@ -8,10 +9,9 @@ CPPPATH    = [cwd + '/include',
     cwd + '/components/finsh', 
     cwd + '/components/net']
 LIBS       = ['rtthread']
-LIBPATH    = [cwd + '/lib']
+LIBPATH    = [os.path.join(cwd, 'lib', Env['ARCH'], Env['ARCH_CPU'])]
 
 group = DefineGroup('sdk', src, depend = [''], CPPPATH = CPPPATH, 
         LIBPATH = LIBPATH, LIBS = LIBS)
 
 Return('group')
-
