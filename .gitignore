@@ -7,6 +7,7 @@
 *.axf
 *.exe
 *.pdb
+*.pyc
 *.idb
 *.ilk
 *.old
@@ -21,3 +22,4 @@ build
 *.i
 *.d
 GPUCache
+/tools/gnu_gcc
