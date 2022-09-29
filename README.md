@@ -29,7 +29,7 @@ git clone https://github.com/RT-Thread/userapps.git
 
 ### 配置工具链
 
-在userapps\tools目录下运行get_toolchain.py的脚本，会下载对应的工具链并展开到userapps\tools\gun_gcc目录。后面的工具链名称可以是 arm | aarch64 | riscv64。
+在userapps\tools目录下运行get_toolchain.py的脚本，会下载对应的工具链并展开到userapps\tools\gun_gcc目录。后面的工具链名称可以是 arm | riscv64。
 
 本文以RISC-V平台为例，输入下面的命令：
 
@@ -37,10 +37,10 @@ git clone https://github.com/RT-Thread/userapps.git
 python get_toolchain.py riscv64
 ```
 
-在userapps目录下,运行smart-env.bat配置工具链路径
+在userapps目录下,运行smart-env.bat配置工具链路径，目前支持的参数可以是 arm | riscv64
 
 ```
-smart-env.bat
+smart-env.bat riscv64
 ```
 
 可使用set命令检查RTT_EXEC_PATH是否设置成功
