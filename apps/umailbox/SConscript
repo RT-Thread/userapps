@@ -1,0 +1,13 @@
+from building import *
+
+cwd     = GetCurrentDir()
+path    = [cwd]
+src     = ['umailbox_test.c', 'lwp_umailbox.c']
+
+CPPDEFINES = [
+    'HAVE_CCONFIG_H',
+]
+
+group = DefineGroup('UMB', src,  depend = [''], CPPDEFINES = CPPDEFINES, CPPPATH = path)
+
+Return('group')
