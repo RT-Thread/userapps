@@ -43,7 +43,7 @@ if __name__ == '__main__':
         target = 'arm'
 
     ci = CI()
-    toolchain_path = os.path.join(os.path.abspath('.'), 'gnu_gcc')
+    toolchain_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'gnu_gcc')
 
     platform = platform.system()
 
