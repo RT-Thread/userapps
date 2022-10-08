@@ -1,98 +1,98 @@
-# RT-Smart 用户态应用开发SDK
+# RT-Smart User Space Application SDK
 
-## 如何构建用户态应用
+[中文](README_ZH.md) | English
 
-### 下载代码
+## How to Build User Space Application
 
-下载smart 用户态应用代码：
+### Download Code
+
+Download RT-Smart user space application code: 
 
 ```
 git clone https://github.com/RT-Thread/userapps.git
 ```
 
-源码目录说明：
+Source code catalog description: 
 
 ```
 .
-├── apps                  ---- app体验示例
-├── configs               ---- 不同平台app的通用配置
-├── linker_scripts        ---- 编译app使用的链接脚本
-├── prebuilt              ---- 预编译好的内核镜像
-├── rtconfig.h            ---- app使用的公共配置文件
-├── sdk                   ---- 开发app使用的sdk
-├── smart-env.bat         ---- 配置Win上环境变量的脚本
-├── smart-env.sh          ---- 配置Linux上环境变量的脚本
-└── tools                 ---- 开发app使用的脚本工具
-     ├── get_toolchain.py ---- 下载工具链的脚本
-     └── gnu_gcc          ---- 下载下来的工具链存放的路径
+├── apps                  ---- app experience sample
+├── configs               ---- Common configuration for different platform app
+├── linker_scripts        ---- Compile the linker script app used
+├── prebuilt              ---- Precompiled kernel mirroring
+├── rtconfig.h            ---- Public configuration file app used
+├── sdk                   ---- sdk used while developing app
+├── smart-env.bat         ---- Configure the script for environment variables on Win
+├── smart-env.sh          ---- Confiure the script for environment variables on Linux
+└── tools                 ---- Script tools used while developing app
+     ├── get_toolchain.py ---- Script for downloading the toolchain
+     └── gnu_gcc          ---- Path where the downloaded toolchain is located
 ```
 
-### 配置工具链
+### Configure Toolchain
 
-在userapps\tools目录下运行get_toolchain.py的脚本，会下载对应的工具链并展开到userapps\tools\gun_gcc目录。后面的工具链名称可以是 arm | riscv64。
+Running get_toolchain.py script in the userapps\tools directory, the corresponding toolchain will be downloaded and expanded to the userapps\tools\gun_gcc directory. The toolchain can be named arm | riscv64.
 
-本文以RISC-V平台为例，输入下面的命令：
+In this article, we're taking the RISC-V platform as an example and entering the following command:
 
 ```
 python get_toolchain.py riscv64
 ```
 
-在userapps目录下,运行smart-env.bat配置工具链路径，目前支持的参数可以是 arm | riscv64
+In the userapps directory, run smart-env.bat to configure the toolchain path, and the currently supported parameter is arm | riscv64
 
 ```
 smart-env.bat riscv64
 ```
 
-可使用set命令检查RTT_EXEC_PATH是否设置成功
+Here you can use the set command to check if the RTT_EXEC_PATH is successfully set.
 
 ![img](figures/set.png)
 
-### 编译用户态应用
+### Configure User Space App
 
-在rtthread-smart\userapps目录下使用scons编译，编译顺利的话，将在root文件夹中得到一系列可执行elf文件。
+Compile with scons in the rtthread-smart\userapps directory, and if the compilation runs well, you will get a series of executable elf files in the root folder.
 
 ![img](figures/build_app.png)
 
-## 运行用户态应用
+## Run User Space App
 
-在本仓库的 prebuilt 目录下存放有预构建好的针对 QEMU RISC-V 平台的内核镜像 qemu-virt64-riscv\rtthread.bin，可以直接运行体验。
+In the prebuilt directory of this repository, there is a pre-built kernel mirror qemu-virt64-riscv\rtthread.bin for the QEMU RISC-V platform, you can quickly start with RISC-V with QEMU platform. 
 
-### 更新QEMU
+### Update QEMU
 
-由于 Env 自带的 QEMU 版本过低，因此需要更新 QEMU（Env更新QEMU后可删除本步骤）
+The QEMU version inside the Env is running an earlier version, it needs an update (Env can delete this step after updating the QEMU)
 
-1. 下载安装 QEMU（推荐qemu-w32-setup-20220831.exe ）：https://qemu.weilnetz.de/w32/
-2. 将 Env 里的 QEMU 替换为新版本。
+1. Download and install QEMU (recommend qemu-w32-setup-20220831.exe ):https://qemu.weilnetz.de/w32/
+2. Replace the QEMU in Env with the new version.
 
-### 制作QEMU SD卡
+### Make QEMU SD Card
 
-在 tools\fatdisk 目录下有一个打包 FAT 格式文件的工具 fatdisk.exe，我们可以利用这个工具将我们要存储到QEMU SD卡里的文件打包成 sd.bin 文件。
-
-1. 
+In the tools\fatdisk directory there is a tool fatdisk .exe that packages FAT format files, which we can use to package the files we want to store in the QEMU SD card into sd.bin files.
 
 ![img](figures/build_sd1.png)
 
-2. 将新生成的 sd.bin 放入userapps\prebuilt\qemu-virt64-riscv目录。
+1. Place the newly generated sd.bin into the userapps\prebuilt\qemu-virt64-riscv directory.
 
-### 运行QEMU
+### Run QEMU
 
-在userapps\prebuilt\qemu-virt64-riscv目录下打开Env，执行qemu-norgraphic.bat运行QEMU。
+Open Env in the userapps\prebuilt\qemu-virt64-riscv directory, execute qemu-norgraphic.bat to run QEMU.
 
 ![img](figures/qemu_run.png)
 
-Smart运行起来后输入 ls 可以看到我们存储到 QEMU SD 卡里的文件和文件夹了。
+Enter ls after Smart is running and you can see the files and folders we have stored on the QEMU SD card.
 
 ![img](figures/qemu_run2.png)
 
-在最后执行了hello示例，输出"hello world!"。
+Here the hello example is executed, outputting "hello world!".
 
-执行ctrl c可退出QEMU。
+Execute ctrl c to exit QEMU.
 
-## 构建内核镜像
+## Built Kernel Mirroring
 
-当需要更新内核镜像文件时，查看本节内容。
+Review this section when you need to update the kernel mirroring files.
 
-下载rt-thread源码（如有则跳过），之后切换到rt-smart分支并从远端同步更新。
+Download the rt-thread source code (skip if it's already done), then switch to the rt-smart branch and synchronize updates from the remote end.
 
 ```
 git clone https://github.com/RT-Thread/rt-thread.git
@@ -102,19 +102,18 @@ git checkout rt-smart
 git pull origin rt-smart
 ```
 
-基于rt-thread仓库rt-smart分支的 qemu-virt64-riscv BSP构建内核镜像。
+Build kernel mirroring based on qemu-virt64-riscv BSP in the rt-thread repository rt-smart branch.
 
 ![img](figures/build_kernel1.png)
-
 ![img](figures/build_kernel2.png)
 
-将生成的内核镜像rtthread.bin更新到userapps\prebuilt\qemu-virt64-riscv目录即可。
+Update the generated kernel mirroring rtthread.bin to the userappsprebuiltqemu-virt64-riscv directory.
 
-## QA
+## FAQ
 
-### scons时找不到工具链
+### Toolchain is not found while scons
 
-编译时出现如下信息：
+The following message appears at compile:
 
 ```
 > scons
@@ -131,8 +130,8 @@ scons: *** [apps\webclient\packages\webclient-v2.1.2\src\webclient.o] Error 2
 scons: building terminated because of errors.
 ```
 
-请检查工具链路径是否设置正确，按照文中步骤进行设置。
+Check that if the toolchain path is correctly set, or follow this article to get this right.
 
-### scons时出现zlib1.dll丢失的弹窗
+### zlib1.dll missing prompted while scons
 
-重新下载[zlib1.dll文件](https://www.dlldownloader.com/zlib1-dll/)并分别放在C:\Windows\System32与C:\Windows\SysWOW64文件夹中。
+Re-download [zlib1.dll Files](https://www.dlldownloader.com/zlib1-dll/) and place them in the C:\Windows\System32 and C:\Windows\SysWOW64 folders. https://www.githubstatus.com/
