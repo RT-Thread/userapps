@@ -66,30 +66,13 @@ smart-env.bat riscv64
 
 ### 制作QEMU SD卡
 
-在 Env 工具的 tools\fatdisk 目录下有一个打包 FAT 格式文件的工具 fatdisk.exe，我们可以利用这个工具将我们要存储到QEMU SD卡里的文件打包成 sd.bin 文件。
+在 tools\fatdisk 目录下有一个打包 FAT 格式文件的工具 fatdisk.exe，我们可以利用这个工具将我们要存储到QEMU SD卡里的文件打包成 sd.bin 文件。
 
-1. 将userapps下的root目录复制到env\tools\fatdisk目录下
+1. 
 
 ![img](figures/build_sd1.png)
 
-2. 修改 env\tools\fatdisk 目录下 fatdisk.xml 文件为下面的内容
-
-```
-<?xml version="1.0" encoding="UTF-8"?>
-<fatdisk>
-   <disk_size>65536</disk_size>
-   <sector_size>512</sector_size>
-   <root_dir>root</root_dir>
-   <output>sd.bin</output>
-   <strip>0</strip>
-</fatdisk>
-```
-
-3. 在 env\tools\fatdisk 目录下右键打开 Env 工具，输入命令 fatdisk运行，就会在当前目录下生成 sd.bin 文件了。
-
-![img](figures/build_sd2.png)
-
-4. 将新生成的 sd.bin 放入userapps\prebuilt\qemu-virt64-riscv目录。
+2. 将新生成的 sd.bin 放入userapps\prebuilt\qemu-virt64-riscv目录。
 
 ### 运行QEMU
 
