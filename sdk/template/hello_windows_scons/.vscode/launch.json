@@ -27,7 +27,7 @@
                 }
             ],
             // Windows 下的 gdb 调试器路径(工具链包含 gdb)
-            "miDebuggerPath": "${workspaceRoot}\\..\\..\\..\\tools\\gnu_gcc\\gdb\\gcc-arm-none-eabi-10.3-2021.10-win32\\bin\\arm-none-eabi-gdb.exe"
+            "miDebuggerPath": "${workspaceRoot}\\..\\..\\tools\\gnu_gcc\\gdb\\gcc-arm-none-eabi-10.3-2021.10-win32\\bin\\arm-none-eabi-gdb.exe"
         }
     ]
 }
