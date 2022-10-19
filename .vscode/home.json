@@ -10,8 +10,8 @@
             "RTT_EXEC_PATH": "${SDK_ROOT}/tools/gnu_gcc/%ARCH%-linux-musleabi_for_i686-w64-mingw32/bin"
         },
         "linux": {
-            "RTT_CC_PREFIX": "${ARCH}-unknown-linux-musl-",
-            "RTT_EXEC_PATH": "${SDK_ROOT}/tools/gnu_gcc/${ARCH}-linux-musleabi_for_i686-w64-mingw32/bin"
+            "RTT_CC_PREFIX": "${ARCH}-linux-musleabi-",
+            "RTT_EXEC_PATH": "${SDK_ROOT}/tools/gnu_gcc/${ARCH}-linux-musleabi_for_x86_64-pc-linux-gnu/bin"
         }
     },
     "project_list": [
@@ -39,7 +39,7 @@
     ],
     "toolchain": {
         "name": "arm-linux-musleabi",
-        "installed": true,
+        "installed": false,
         "version": "7.3.0",
         "pipeline": "143917",
         "timestamp": "1665549511"
