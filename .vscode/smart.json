@@ -1,0 +1,31 @@
+{
+    "env": {
+        "windows": {
+            "VENV_MODE": true,
+            "PATH": "%PATH%;%RTT_EXEC_PATH%"
+        },
+        "linux": {
+            "PATH": "$PATH:$RTT_EXEC_PATH"
+        }
+    },
+    "statusBarItem": {
+        "build": {
+            "icon": "$(zap)",
+            "enable": true,
+            "commands": [
+                "scons"
+            ],
+            "label": "编译",
+            "tooltip": "编译 RT-Thread Smart"
+        },
+        "clean": {
+            "icon": "$(clear-all)",
+            "enable": true,
+            "commands": [
+                "scons -c"
+            ],
+            "label": "清理",
+            "tooltip": "清理 RT-Thread Smart"
+        }
+    }
+}

@@ -1,0 +1,50 @@
+{
+    "version": "5.0.0",
+    "env": {
+        "common": {
+            "ARCH": "arm",
+            "RTT_CC": "gcc"
+        },
+        "windows": {
+            "RTT_CC_PREFIX": "%ARCH%-linux-musleabi-",
+            "RTT_EXEC_PATH": "${SDK_ROOT}/tools/gnu_gcc/%ARCH%-linux-musleabi_for_i686-w64-mingw32/bin"
+        },
+        "linux": {
+            "RTT_CC_PREFIX": "${ARCH}-unknown-linux-musl-",
+            "RTT_EXEC_PATH": "${SDK_ROOT}/tools/gnu_gcc/${ARCH}-linux-musleabi_for_i686-w64-mingw32/bin"
+        }
+    },
+    "project_list": [
+        {
+            "folder": "/apps",
+            "name": {
+                "en": "Applications",
+                "zh": "模板应用"
+            }
+        },
+        {
+            "folder": "/workspace",
+            "name": {
+                "en": "Services",
+                "zh": "用户应用"
+            }
+        },
+        {
+            "folder": "/prebuilt",
+            "name": {
+                "en": "prebuilt",
+                "zh": "预编译"
+            }
+        }
+    ],
+    "toolchain": {
+        "name": "arm-linux-musleabi",
+        "installed": true,
+        "version": "7.3.0",
+        "pipeline": "143917",
+        "timestamp": "1665549511"
+    },
+    "kernel": {
+        "folder": "/../rt-thread/bsp/qemu-vexpress-a9"
+    }
+}
