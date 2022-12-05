@@ -38,9 +38,9 @@ union sigval
 #ifndef HAVE_SIGEVENT
 struct sigevent
 {
-    int          sigev_notify;               /* Notification type */
-    int          sigev_signo;                /* Signal number */
     union sigval sigev_value;                /* Signal value */
+    int          sigev_signo;                /* Signal number */
+    int          sigev_notify;               /* Notification type */
     void         (*sigev_notify_function)( union sigval );
                                              /* Notification function */
     void         *sigev_notify_attributes;   /* Notification Attributes, really pthread_attr_t */
