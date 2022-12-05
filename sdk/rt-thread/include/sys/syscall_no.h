@@ -119,11 +119,11 @@ NRSYS(cacheflush)
 NRSYS(rt_setaffinity)
 NRSYS(rt_thread_resv1)
 NRSYS(waitpid)           /* 110 */
-NRSYS(timer_create)
-NRSYS(timer_delete)
-NRSYS(timer_start)
-NRSYS(timer_stop)
-NRSYS(timer_control)      /* 115 */
+NRSYS(rt_timer_create)
+NRSYS(rt_timer_delete)
+NRSYS(rt_timer_start)
+NRSYS(rt_timer_stop)
+NRSYS(rt_timer_control)      /* 115 */
 
 NRSYS(getcwd)
 NRSYS(chdir)
@@ -153,5 +153,25 @@ NRSYS(gettid)
 NRSYS(prlimit64)          /* 140 */
 NRSYS(getrlimit)
 NRSYS(setrlimit)
+NRSYS(setsid)
+
+NRSYS(getrandom)
+NRSYS(readlink)           /* 145 */
+NRSYS(mremap)
+NRSYS(madvise)
+NRSYS(sched_setparam)
+NRSYS(sched_getparam)
+NRSYS(sched_get_priority_max)   /* 150 */
+NRSYS(sched_get_priority_min)
+NRSYS(sched_setscheduler)
+NRSYS(sched_getscheduler)
+NRSYS(sched_setaffinity)
+NRSYS(fsync)                    /* 155 */
+NRSYS(clock_nanosleep)
+NRSYS(timer_create)
+NRSYS(timer_delete)
+NRSYS(timer_settime)
+NRSYS(timer_gettime)            /* 160 */
+NRSYS(timer_getoverrun)
 
 #undef NRSYS
