@@ -6,11 +6,11 @@
 # example: source smart-env.sh aarch64  # aarch64
 
 # supported arch list
-supported_arch="arm aarch64 riscv64 i386"
+supported_arch=(arm aarch64 riscv64 i386)
 
 def_arch="unknown" 
 
-SHELL_FOLDER=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
+SHELL_FOLDER=$(cd $(dirname $0); pwd)
 
 # find arch in arch list
 if [ -z $1 ]
