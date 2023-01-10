@@ -10,13 +10,18 @@
     @set RTT_EXEC_PATH=%cd%\tools\gnu_gcc\arm-linux-musleabi_for_i686-w64-mingw32\bin
     @set RTT_CC_PREFIX=arm-linux-musleabi-
     @copy configs\def_config_arm .config
+) else if %def_arch%==aarch64 (
+    @set RTT_CC=gcc
+    @set RTT_EXEC_PATH=%cd%\tools\gnu_gcc\aarch64-linux-musleabi_for_i686-w64-mingw32\bin
+    @set RTT_CC_PREFIX=aarch64-linux-musleabi-
+    @copy configs\def_config_aarch64 .config
 ) else if %def_arch%==riscv64 (
     @set RTT_CC=gcc
     @set RTT_EXEC_PATH=%cd%\tools\gnu_gcc\riscv64-linux-musleabi_for_i686-w64-mingw32\bin
     @set RTT_CC_PREFIX=riscv64-unknown-linux-musl-
     @copy configs\def_config_riscv64 .config
 ) else (
-    @echo "ERROR:supported_arch=arm riscv64!"
+    @echo "ERROR:supported_arch=arm aarch64 riscv64!"
     @goto EXIT
 )
 
