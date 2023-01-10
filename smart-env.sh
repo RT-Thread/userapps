@@ -4,9 +4,10 @@
 # source smart-env.sh [arch]
 # example: source smart-env.sh          # arm
 # example: source smart-env.sh aarch64  # aarch64
+# example: source smart-env.sh riscv64  # riscv64
 
 # supported arch list
-supported_arch=(arm aarch64 riscv64 i386)
+supported_arch="arm aarch64 riscv64"
 
 def_arch="unknown" 
 
@@ -46,11 +47,6 @@ case $def_arch in
         export RTT_EXEC_PATH=$(pwd)/tools/gnu_gcc/riscv64-linux-musleabi_for_x86_64-pc-linux-gnu/bin
         export RTT_CC_PREFIX=riscv64-unknown-linux-musl-
         cp $SHELL_FOLDER/configs/def_config_riscv64 $SHELL_FOLDER/.config
-        ;;
-    "i386")
-        export RTT_CC=gcc
-        export RTT_EXEC_PATH=$(pwd)/tools/gnu_gcc/i386-linux-musleabi_for_x86_64-pc-linux-gnu/bin
-        export RTT_CC_PREFIX=i386-unknown-linux-musl-
         ;;
     *)  echo "unknown arch!"
         return 1
