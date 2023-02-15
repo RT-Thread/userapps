@@ -11,7 +11,7 @@ supported_arch="arm aarch64 riscv64"
 
 def_arch="unknown" 
 
-SHELL_FOLDER=$(cd $(dirname $0); pwd)
+SHELL_FOLDER=$(cd $(dirname $BASH_SOURCE); pwd)
 
 # find arch in arch list
 if [ -z $1 ]
