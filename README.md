@@ -31,7 +31,7 @@ Source code catalog description:
 
 ### Configure Toolchain
 
-Running get_toolchain.py script in the userapps\tools directory, the corresponding toolchain will be downloaded and expanded to the userapps\tools\gun_gcc directory. The toolchain can be named arm | riscv64.
+Running get_toolchain.py script in the userapps\tools directory, the corresponding toolchain will be downloaded and expanded to the userapps\tools\gun_gcc directory. The toolchain can be named arm | aarch64 | riscv64.
 
 In this article, we're taking the RISC-V platform as an example and entering the following command:
 
@@ -39,7 +39,7 @@ In this article, we're taking the RISC-V platform as an example and entering the
 python get_toolchain.py riscv64
 ```
 
-In the userapps directory, run smart-env.bat to configure the toolchain path, and the currently supported parameter is arm | riscv64
+In the userapps directory, run smart-env.bat | smart-env.sh to configure the toolchain path, and the currently supported parameter is arm | aarch64 | riscv64
 
 ```
 smart-env.bat riscv64
@@ -68,7 +68,11 @@ The QEMU version inside the Env is running an earlier version, it needs an updat
 
 ### Make QEMU SD Card
 
-In the tools\fatdisk directory there is a tool fatdisk .exe that packages FAT format files, which we can use to package the files we want to store in the QEMU SD card into sd.bin files.
+#### FAT
+In the tools\fatdisk directory there is a tool fatdisk.exe that packages FAT format files, which we can use to package the files we want to store in the QEMU SD card into sd.bin files.
+
+#### EXT4
+In the tools\make_ext4fs directory, there is a tool make_ext4fs for packaging EXT4 format files (linux (ubuntu) only), use the command `./make_ext4fs -l 8G rootfs.img /home/xqyjl/git/github/RT-Thread/userapps /root` to create an ext4 image
 
 ![img](figures/build_sd1.png)
 
