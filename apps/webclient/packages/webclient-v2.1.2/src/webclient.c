@@ -1409,26 +1409,26 @@ static int webclient_clean(struct webclient_session *session)
  *
  * @return 0: close success
  */
-int webclient_close(struct webclient_session *session)
+int webclient_close(struct webclient_session **session)
 {
-    RT_ASSERT(session);
+    RT_ASSERT(*session);
 
-    webclient_clean(session);
+    webclient_clean(*session);
 
-    if (session->header && session->header->buffer)
+    if ((*session)->header && (*session)->header->buffer)
     {
-        web_free(session->header->buffer);
+        web_free((*session)->header->buffer);
     }
 
-    if (session->header)
+    if ((*session)->header)
     {
-        web_free(session->header);
+        web_free((*session)->header);
     }
 
-    if (session)
+    if (*session)
     {
-        web_free(session);
-        session = RT_NULL;
+        web_free(*session);
+        *session = RT_NULL;
     }
 
     return 0;
@@ -1689,8 +1689,7 @@ int webclient_request(const char *URI, const char *header, const char *post_data
 __exit:
     if (session)
     {
-        webclient_close(session);
-        session = RT_NULL;
+        webclient_close(&session);
     }
 
     if (rc < 0)

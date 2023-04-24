@@ -76,7 +76,7 @@ static int webclient_post_comm(const char *uri, const char *post_data)
 __exit:
     if (session)
     {
-        webclient_close(session);
+        webclient_close(&session);
     }
 
     if (buffer)

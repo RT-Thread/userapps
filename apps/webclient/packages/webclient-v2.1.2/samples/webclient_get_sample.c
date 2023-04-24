@@ -100,7 +100,7 @@ static int webclient_get_comm(const char *uri)
 __exit:
     if (session)
     {
-        webclient_close(session);
+        webclient_close(&session);
     }
 
     if (buffer)
