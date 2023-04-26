@@ -113,7 +113,7 @@ int webclient_get_position(struct webclient_session *session, const char *URI, i
 int webclient_post(struct webclient_session *session, const char *URI, const char *post_data);
 
 /* close and release wenclient session */
-int webclient_close(struct webclient_session **session);
+int webclient_close(struct webclient_session *session);
 
 int webclient_set_timeout(struct webclient_session *session, int millisecond);
 
