@@ -525,6 +525,7 @@ int webclient_header_fields_add(struct webclient_session *session, const char *f
     if (length < 0)
     {
         LOG_E("add fields header data failed, return length(%d) error.", length);
+        va_end(args);
         return -WEBCLIENT_ERROR;
     }
     va_end(args);
@@ -1560,6 +1561,7 @@ int webclient_request_header_add(char **request_header, const char *fmt, ...)
     if (length < 0)
     {
         LOG_E("add request header data failed, return length(%d) error.", length);
+        va_end(args);
         return -WEBCLIENT_ERROR;
     }
     va_end(args);
