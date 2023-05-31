@@ -1,0 +1,911 @@
+diff --git a/archival/bbunzip.c b/archival/bbunzip.c
+index 0ac059c19..d0356b090 100644
+--- a/archival/bbunzip.c
++++ b/archival/bbunzip.c
+@@ -132,10 +132,12 @@ int FAST_FUNC bbunpack(char **argv,
+ 				xfunc_die();
+ 		}
+ 
+-		if (!(option_mask32 & BBUNPK_OPT_STDOUT))
+-			xclose(STDOUT_FILENO); /* with error check! */
++        if (!(option_mask32 & BBUNPK_OPT_STDOUT)) {
++            xclose(STDOUT_FILENO); /* with error check! */
++            xclose(STDIN_FILENO);
++        }
+ 
+-		if (filename) {
++        if (filename) {
+ 			char *del = new_name;
+ 
+ 			if (status >= 0) {
+diff --git a/coreutils/ls.c b/coreutils/ls.c
+index 48f5eb482..1c8699279 100644
+--- a/coreutils/ls.c
++++ b/coreutils/ls.c
+@@ -185,7 +185,7 @@
+ # define IF_NOT_FEATURE_LS_TIMESTAMPS(...)
+ #endif
+ 
+-
++static char list_buff[100];
+ enum {
+ TERMINAL_WIDTH  = 80, /* use 79 if terminal has linefold bug */
+ 
+@@ -1066,6 +1066,9 @@ int ls_main(int argc UNUSED_PARAM, char **argv)
+ 	unsigned dnfiles;
+ 	unsigned dndirs;
+ 	unsigned i;
++
++    struct stat stat_buf;
++    int         value = 0;
+ #if ENABLE_FEATURE_LS_COLOR
+ 	/* colored LS support by JaWi, janwillem.janssen@lxtreme.nl */
+ 	/* coreutils 6.10:
+@@ -1198,10 +1201,16 @@ int ls_main(int argc UNUSED_PARAM, char **argv)
+ 	}
+ 
+ 	argv += optind;
+-	if (!argv[0])
+-		*--argv = (char*)".";
+-
+-	if (argv[1])
++    value = stat(list_buff, &stat_buf);
++    if (!value) {
++        if (!argv[0])
++            *--argv = list_buff;
++    }
++    else {
++        if (!argv[0])
++            *--argv = (char *)".";
++    }
++    if (argv[1])
+ 		G.show_dirname = 1; /* 2 or more items? label directories */
+ 
+ 	/* stuff the command line file names into a dnode array */
+diff --git a/e2fsprogs/tune2fs.c b/e2fsprogs/tune2fs.c
+index f7fcd88bf..98670f567 100644
+--- a/e2fsprogs/tune2fs.c
++++ b/e2fsprogs/tune2fs.c
+@@ -36,7 +36,7 @@
+ //usage:       "Adjust filesystem options on ext[23] filesystems"
+ 
+ #include "libbb.h"
+-#include <linux/fs.h>
++//#include <linux/fs.h>
+ #include "bb_e2fs_defs.h"
+ 
+ enum {
+diff --git a/editors/patch.c b/editors/patch.c
+index 110176630..28e53b949 100644
+--- a/editors/patch.c
++++ b/editors/patch.c
+@@ -163,7 +163,8 @@ static void finish_oldfile(void)
+ 		if (!ENABLE_LONG_OPTS || TT.tempname[0]) { /* not --dry-run? */
+ 			temp = xstrdup(TT.tempname);
+ 			temp[strlen(temp) - 6] = '\0';
+-			rename(TT.tempname, temp);
++            xunlink(temp);
++            rename(TT.tempname, temp);
+ 			free(temp);
+ 			free(TT.tempname);
+ 		}
+diff --git a/include/libbb.h b/include/libbb.h
+index a48782832..fb8860ca6 100644
+--- a/include/libbb.h
++++ b/include/libbb.h
+@@ -2248,7 +2248,7 @@ extern const char bb_path_wtmp_file[] ALIGN1;
+ 
+ /* Busybox mount uses either /proc/mounts or /etc/mtab to
+  * get the list of currently mounted filesystems */
+-#define bb_path_mtab_file IF_FEATURE_MTAB_SUPPORT("/etc/mtab")IF_NOT_FEATURE_MTAB_SUPPORT("/proc/mounts")
++#define bb_path_mtab_file IF_FEATURE_MTAB_SUPPORT("/etc/mtab")IF_NOT_FEATURE_MTAB_SUPPORT("/etc/mtab")
+ 
+ #define bb_path_passwd_file  _PATH_PASSWD
+ #define bb_path_group_file   _PATH_GROUP
+diff --git a/libbb/copyfd.c b/libbb/copyfd.c
+index 7f9d92ea9..e88c62e5a 100644
+--- a/libbb/copyfd.c
++++ b/libbb/copyfd.c
+@@ -84,7 +84,14 @@ static off_t bb_full_fd_action(int src_fd, int dst_fd, off_t size)
+ 			}
+ 		}
+ #endif
+-		rd = safe_read(src_fd, buffer,
++        char tmpstr[10];
++        if (buffer[0] != NULL && !strcmp(applet_name, "zcat")) {
++            memset(buffer, '\0', sizeof(buffer));
++            // need to run printf or sprintf, or buffer will not be setted success.
++            sprintf(tmpstr, "%c", buffer[0]);
++            break;
++        }
++        rd = safe_read(src_fd, buffer,
+ 			size > buffer_size ? buffer_size : size);
+ 		if (rd < 0) {
+ 			bb_simple_perror_msg(bb_msg_read_error);
+diff --git a/libbb/loop.c b/libbb/loop.c
+index cb8fa2442..58677486b 100644
+--- a/libbb/loop.c
++++ b/libbb/loop.c
+@@ -8,14 +8,194 @@
+  * Licensed under GPLv2 or later, see file LICENSE in this source tree.
+  */
+ #include "libbb.h"
+-#include <linux/version.h>
++// #include <linux/version.h>
++#define LINUX_VERSION_CODE 328777
++#define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
++
++#ifndef _LINUX_LOOP_H
++#define _LINUX_LOOP_H
++
++/*
++ * include/linux/loop.h
++ *
++ * Written by Theodore Ts'o, 3/29/93.
++ *
++ * Copyright 1993 by Theodore Ts'o.  Redistribution of this file is
++ * permitted under the GNU General Public License.
++ */
++
++#define LO_NAME_SIZE	64
++#define LO_KEY_SIZE	32
++
++#ifdef __KERNEL__
++#include <linux/bio.h>
++#include <linux/blkdev.h>
++#include <linux/spinlock.h>
++#include <linux/mutex.h>
++
++/* Possible states of device */
++enum {
++	Lo_unbound,
++	Lo_bound,
++	Lo_rundown,
++};
++
++struct loop_func_table;
++
++struct loop_device {
++	int		lo_number;
++	int		lo_refcnt;
++	loff_t		lo_offset;
++	loff_t		lo_sizelimit;
++	int		lo_flags;
++	int		(*transfer)(struct loop_device *, int cmd,
++				    struct page *raw_page, unsigned raw_off,
++				    struct page *loop_page, unsigned loop_off,
++				    int size, sector_t real_block);
++	char		lo_file_name[LO_NAME_SIZE];
++	char		lo_crypt_name[LO_NAME_SIZE];
++	char		lo_encrypt_key[LO_KEY_SIZE];
++	int		lo_encrypt_key_size;
++	struct loop_func_table *lo_encryption;
++	__u32           lo_init[2];
++	uid_t		lo_key_owner;	/* Who set the key */
++	int		(*ioctl)(struct loop_device *, int cmd, 
++				 unsigned long arg); 
++
++	struct file *	lo_backing_file;
++	struct block_device *lo_device;
++	unsigned	lo_blocksize;
++	void		*key_data; 
++
++	gfp_t		old_gfp_mask;
++
++	spinlock_t		lo_lock;
++	struct bio_list		lo_bio_list;
++	int			lo_state;
++	struct mutex		lo_ctl_mutex;
++	struct task_struct	*lo_thread;
++	wait_queue_head_t	lo_event;
++
++	struct request_queue	*lo_queue;
++	struct gendisk		*lo_disk;
++	struct list_head	lo_list;
++};
++
++#endif /* __KERNEL__ */
++
++/*
++ * Loop flags
++ */
++enum {
++	LO_FLAGS_READ_ONLY	= 1,
++	LO_FLAGS_USE_AOPS	= 2,
++	LO_FLAGS_AUTOCLEAR	= 4,
++};
++
++//#include <asm/posix_types.h>	/* for __kernel_old_dev_t */
++typedef unsigned short		__kernel_old_dev_t;
++#define __kernel_old_dev_t __kernel_old_dev_t
++//#include <linux/types.h>	/* for __u64 */
++typedef __signed__ char __s8;
++typedef unsigned char __u8;
++
++typedef __signed__ short __s16;
++typedef unsigned short __u16;
++
++typedef __signed__ int __s32;
++typedef unsigned int __u32;
++
++__extension__ typedef __signed__ long long __s64;
++__extension__ typedef unsigned long long __u64;
++
++/* Backwards compatibility version */
++struct loop_info {
++	int		   lo_number;		/* ioctl r/o */
++	__kernel_old_dev_t lo_device; 		/* ioctl r/o */
++	unsigned long	   lo_inode; 		/* ioctl r/o */
++	__kernel_old_dev_t lo_rdevice; 		/* ioctl r/o */
++	int		   lo_offset;
++	int		   lo_encrypt_type;
++	int		   lo_encrypt_key_size; 	/* ioctl w/o */
++	int		   lo_flags;			/* ioctl r/o */
++	char		   lo_name[LO_NAME_SIZE];
++	unsigned char	   lo_encrypt_key[LO_KEY_SIZE]; /* ioctl w/o */
++	unsigned long	   lo_init[2];
++	char		   reserved[4];
++};
++
++struct loop_info64 {
++	__u64		   lo_device;			/* ioctl r/o */
++	__u64		   lo_inode;			/* ioctl r/o */
++	__u64		   lo_rdevice;			/* ioctl r/o */
++	__u64		   lo_offset;
++	__u64		   lo_sizelimit;/* bytes, 0 == max available */
++	__u32		   lo_number;			/* ioctl r/o */
++	__u32		   lo_encrypt_type;
++	__u32		   lo_encrypt_key_size;		/* ioctl w/o */
++	__u32		   lo_flags;			/* ioctl r/o */
++	__u8		   lo_file_name[LO_NAME_SIZE];
++	__u8		   lo_crypt_name[LO_NAME_SIZE];
++	__u8		   lo_encrypt_key[LO_KEY_SIZE]; /* ioctl w/o */
++	__u64		   lo_init[2];
++};
++
++/*
++ * Loop filter types
++ */
++
++#define LO_CRYPT_NONE		0
++#define LO_CRYPT_XOR		1
++#define LO_CRYPT_DES		2
++#define LO_CRYPT_FISH2		3    /* Twofish encryption */
++#define LO_CRYPT_BLOW		4
++#define LO_CRYPT_CAST128	5
++#define LO_CRYPT_IDEA		6
++#define LO_CRYPT_DUMMY		9
++#define LO_CRYPT_SKIPJACK	10
++#define LO_CRYPT_CRYPTOAPI	18
++#define MAX_LO_CRYPT		20
++
++#ifdef __KERNEL__
++/* Support for loadable transfer modules */
++struct loop_func_table {
++	int number;	/* filter type */ 
++	int (*transfer)(struct loop_device *lo, int cmd,
++			struct page *raw_page, unsigned raw_off,
++			struct page *loop_page, unsigned loop_off,
++			int size, sector_t real_block);
++	int (*init)(struct loop_device *, const struct loop_info64 *); 
++	/* release is called from loop_unregister_transfer or clr_fd */
++	int (*release)(struct loop_device *); 
++	int (*ioctl)(struct loop_device *, int cmd, unsigned long arg);
++	struct module *owner;
++}; 
++
++int loop_register_transfer(struct loop_func_table *funcs);
++int loop_unregister_transfer(int number); 
++
++#endif
++/*
++ * IOCTL commands --- we will commandeer 0x4C ('L')
++ */
++
++#define LOOP_SET_FD		0x4C00
++#define LOOP_CLR_FD		0x4C01
++#define LOOP_SET_STATUS		0x4C02
++#define LOOP_GET_STATUS		0x4C03
++#define LOOP_SET_STATUS64	0x4C04
++#define LOOP_GET_STATUS64	0x4C05
++#define LOOP_CHANGE_FD		0x4C06
++#define LOOP_SET_CAPACITY	0x4C07
++
++#endif
+ 
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+ 
+ /* For 2.6, use the cleaned up header to get the 64 bit API. */
+ // Commented out per Rob's request
+ //# include "fix_u32.h" /* some old toolchains need __u64 for linux/loop.h */
+-# include <linux/loop.h>
++//# include <linux/loop.h>
+ typedef struct loop_info64 bb_loop_info;
+ # define BB_LOOP_SET_STATUS LOOP_SET_STATUS64
+ # define BB_LOOP_GET_STATUS LOOP_GET_STATUS64
+diff --git a/miscutils/partprobe.c b/miscutils/partprobe.c
+index 0fb1927b7..5a2915ef5 100644
+--- a/miscutils/partprobe.c
++++ b/miscutils/partprobe.c
+@@ -14,7 +14,7 @@
+ 
+ //kbuild:lib-$(CONFIG_PARTPROBE) += partprobe.o
+ 
+-#include <linux/fs.h>
++//#include <linux/fs.h>
+ #include "libbb.h"
+ #ifndef BLKRRPART
+ # define BLKRRPART _IO(0x12,95)
+diff --git a/networking/ftpd.c b/networking/ftpd.c
+index 0d6a289c7..358b5aae1 100644
+--- a/networking/ftpd.c
++++ b/networking/ftpd.c
+@@ -131,6 +131,7 @@
+ #define STR1(s) #s
+ #define STR(s) STR1(s)
+ 
++char list_buff[100] = {'0'};
+ /* Convert a constant to 3-digit string, packed into uint32_t */
+ enum {
+ 	/* Shift for Nth decimal digit */
+@@ -154,6 +155,8 @@ enum {
+ 
+ #define MSG_OK "Operation successful\r\n"
+ #define MSG_ERR "Error\r\n"
++int   totalnum = 0;
++char *basedir  = NULL;
+ 
+ struct globals {
+ 	int pasv_listen_fd;
+@@ -327,26 +330,133 @@ static void
+ handle_pwd(void)
+ {
+ 	char *cwd, *response;
+-
+-	cwd = xrealloc_getcwd_or_warn(NULL);
++    int   cwd_len      = 0;
++    int   response_len = 0;
++    int   basedir_len  = 0;
++    basedir_len        = strlen(basedir);
++    cwd = xrealloc_getcwd_or_warn(NULL);
+ 	if (cwd == NULL)
+ 		cwd = xstrdup("");
+ 
+-	/* We have to promote each " to "" */
++    cwd_len      = strlen(cwd);
++    /* We have to promote each " to "" */
+ 	response = escape_text(" \"", cwd, ('"' << 8) + '"');
+-	free(cwd);
+-	cmdio_write(STRNUM32(FTP_PWDOK), response);
+-	free(response);
++    response_len = strlen(response);
++    free(cwd);
++    char buff[response_len];
++    memset(buff, sizeof(buff), response_len);
++    if (cwd_len <= basedir_len) {
++        strncpy(buff, response, 3);
++        strncpy(buff + 3, &response[response_len - 1], 1);
++        buff[4] = '\0';
++        cmdio_write(STRNUM32(FTP_PWDOK), buff);
++    }
++    else {
++        strncpy(buff, response, 2);
++        strncpy(buff + 2, &response[2 + basedir_len], response_len - 2 - basedir_len);
++        buff[response_len - basedir_len] = '\0';
++        cmdio_write(STRNUM32(FTP_PWDOK), buff);
++    }
++    free(response);
+ }
+ 
+ static void
+ handle_cwd(void)
+ {
+-	if (!G.ftp_arg || chdir(G.ftp_arg) != 0) {
+-		WRITE_ERR(FTP_FILEFAIL);
+-		return;
+-	}
+-	WRITE_OK(FTP_CWDOK);
++    char buff[500];
++    char buff_path[500];
++    int  len_basedir = 0;
++    int  len_oldpath = 0;
++    int  len_newpath = 0;
++    int  buff_len    = 0;
++    memset(buff, 0, sizeof(buff));
++    memset(buff_path, 0, sizeof(buff_path));
++    memset(list_buff, 0, sizeof(list_buff));
++    memcpy(list_buff, basedir, strlen(basedir));
++
++    char *cwd_old, *response_old;
++    char *cwd_new, *response_new;
++
++    cwd_old = xrealloc_getcwd_or_warn(NULL);
++    if (cwd_old == NULL)
++        cwd_old = xstrdup("");
++
++    response_old = escape_text(" \"", cwd_old, ('"' << 8) + '"');
++    len_oldpath  = strlen(response_old);
++    free(cwd_old);
++    len_basedir = strlen(basedir);
++
++    strncpy(buff, response_old + 2, strlen(response_old) - 3);
++
++    free(response_old);
++    if (strcmp(G.ftp_arg, "/") == 0) {
++        if (!basedir || chdir(basedir) != 0) {
++            memset(list_buff, 0, sizeof(list_buff));
++            memcpy(list_buff, buff, strlen(buff));
++            WRITE_ERR(FTP_FILEFAIL);
++            return;
++        }
++        memset(list_buff, 0, sizeof(list_buff));
++        memcpy(list_buff, basedir, strlen(basedir));
++        WRITE_OK(FTP_CWDOK);
++        return;
++    }
++
++    if ((G.ftp_arg[0] == '/') && (strlen(G.ftp_arg) != 1)) {
++        strcpy(buff_path, basedir);
++        strcat(buff_path, G.ftp_arg);
++        if (!buff_path || chdir(buff_path) != 0) {
++            memset(list_buff, 0, sizeof(list_buff));
++            memcpy(list_buff, buff, strlen(buff));
++            WRITE_ERR(FTP_FILEFAIL);
++            return;
++        }
++        memset(list_buff, 0, sizeof(list_buff));
++        memcpy(list_buff, buff_path, strlen(buff_path));
++        goto CHECK;
++    }
++    else {
++        if (!G.ftp_arg || chdir(buff) != 0) {
++            memset(list_buff, 0, sizeof(list_buff));
++            memcpy(list_buff, buff, strlen(buff));
++            WRITE_ERR(FTP_FILEFAIL);
++            return;
++        }
++        if (!G.ftp_arg || chdir(G.ftp_arg) != 0) {
++            memset(list_buff, 0, sizeof(list_buff));
++            memcpy(list_buff, buff, strlen(buff));
++            WRITE_ERR(FTP_FILEFAIL);
++            return;
++        }
++        memset(list_buff, 0, sizeof(list_buff));
++        buff_len = strlen(buff);
++        memcpy(list_buff, buff, buff_len);
++        list_buff[buff_len] = '/';
++        strcat(list_buff + buff_len + 1, G.ftp_arg);
++    }
++CHECK:
++    cwd_new = xrealloc_getcwd_or_warn(NULL);
++    if (cwd_new == NULL)
++        cwd_new = xstrdup("");
++
++    response_new = escape_text(" \"", cwd_new, ('"' << 8) + '"');
++    free(cwd_new);
++    len_newpath = strlen(response_new);
++    free(response_new);
++    if ((len_newpath - 3) < len_basedir) {
++        if (!buff || chdir(buff) != 0) {
++            memset(list_buff, 0, sizeof(list_buff));
++            memcpy(list_buff, buff, strlen(buff));
++            WRITE_ERR(FTP_FILEFAIL);
++            return;
++        }
++        memset(list_buff, 0, sizeof(list_buff));
++        memcpy(list_buff, buff, strlen(buff));
++        WRITE_ERR(FTP_FILEFAIL);
++        return;
++    }
++
++    WRITE_OK(FTP_CWDOK);
+ }
+ 
+ static void
+@@ -754,15 +864,20 @@ handle_dir_common(int opts)
+ 	FILE *ls_fp;
+ 	char *line;
+ 	int ls_fd;
++    int   number = 0;
+ 
+-	if (!(opts & USE_CTRL_CONN) && !port_or_pasv_was_seen())
++    if (!(opts & USE_CTRL_CONN) && !port_or_pasv_was_seen())
+ 		return; /* port_or_pasv_was_seen emitted error response */
+ 
+ 	ls_fd = popen_ls((opts & LONG_LISTING) ? "-lA" : "-1A");
+-	ls_fp = xfdopen_for_read(ls_fd);
++    if (ls_fd < 0) {
++        WRITE_OK(FTP_TRANSFEROK);
++        return;
++    }
++    ls_fp = xfdopen_for_read(ls_fd);
+ /* FIXME: filenames with embedded newlines are mishandled */
+ 
+-	if (opts & USE_CTRL_CONN) {
++    if (opts & USE_CTRL_CONN) {
+ 		/* STAT <filename> */
+ 		cmdio_write_raw(STR(FTP_STATFILE_OK)"-File status:\r\n");
+ 		while (1) {
+@@ -783,7 +898,10 @@ handle_dir_common(int opts)
+ 			while (1) {
+ 				unsigned len;
+ 
+-				line = xmalloc_fgets(ls_fp);
++                if (number >= totalnum)
++                    break;
++                number++;
++                line = xmalloc_fgets(ls_fp);
+ 				if (!line)
+ 					break;
+ 				/* I've seen clients complaining when they
+@@ -902,21 +1020,55 @@ handle_mkd(void)
+ static void
+ handle_rmd(void)
+ {
+-	if (!G.ftp_arg || rmdir(G.ftp_arg) != 0) {
+-		WRITE_ERR(FTP_FILEFAIL);
+-		return;
+-	}
+-	WRITE_OK(FTP_RMDIROK);
++    char buff[200];
++    int  basedir_len = 0;
++    int  arg_len     = 0;
++    memset(buff, sizeof(buff), 200);
++    basedir_len = strlen(basedir);
++    arg_len     = strlen(G.ftp_arg);
++    if (G.ftp_arg[0] == '/') {
++        strncpy(buff, basedir, basedir_len);
++        strncpy(buff + basedir_len, G.ftp_arg, arg_len);
++        buff[basedir_len + arg_len] = '\0';
++        if (!G.ftp_arg || rmdir(buff) != 0) {
++            WRITE_ERR(FTP_FILEFAIL);
++            return;
++        }
++    }
++    else {
++        if (!G.ftp_arg || rmdir(G.ftp_arg) != 0) {
++            WRITE_ERR(FTP_FILEFAIL);
++            return;
++        }
++    }
++    WRITE_OK(FTP_RMDIROK);
+ }
+ 
+ static void
+ handle_dele(void)
+ {
+-	if (!G.ftp_arg || unlink(G.ftp_arg) != 0) {
+-		WRITE_ERR(FTP_FILEFAIL);
+-		return;
+-	}
+-	WRITE_OK(FTP_DELEOK);
++    char buff[200];
++    int  basedir_len = 0;
++    int  arg_len     = 0;
++    memset(buff, sizeof(buff), 200);
++    basedir_len = strlen(basedir);
++    arg_len     = strlen(G.ftp_arg);
++    if (G.ftp_arg[0] == '/') {
++        strncpy(buff, basedir, basedir_len);
++        strncpy(buff + basedir_len, G.ftp_arg, arg_len);
++        buff[basedir_len + arg_len] = '\0';
++        if (!G.ftp_arg || rmdir(buff) != 0) {
++            WRITE_ERR(FTP_FILEFAIL);
++            return;
++        }
++    }
++    else {
++        if (!G.ftp_arg || rmdir(G.ftp_arg) != 0) {
++            WRITE_ERR(FTP_FILEFAIL);
++            return;
++        }
++    }
++    WRITE_OK(FTP_DELEOK);
+ }
+ 
+ static void
+@@ -1169,6 +1321,53 @@ enum {
+ 	OPT_w = (1 << (BIT_A + 3)) * ENABLE_FEATURE_FTPD_WRITE,
+ };
+ 
++void GetTheNumberOfCurrentPath()
++{
++    struct stat    s_buf;
++    DIR           *dire;
++    struct dirent *ptr;
++    char          *ret;
++    int            len = 0;
++    char           currentpath[500];
++    totalnum       = 0;
++    int stat_value = 0;
++    memset(currentpath, 0, sizeof(currentpath));
++    unsigned path_max_temporary;
++    path_max_temporary = 500;
++    ret                = getcwd(currentpath, path_max_temporary);
++    if (ret == NULL) {
++        perror("failed to obtain currentpath");
++        exit(-1);
++    }
++
++    len = strlen(currentpath);
++    if (G.ftp_arg != NULL) {
++        stat_value = stat(G.ftp_arg, &s_buf);
++        if (stat_value == 0) {
++            if (S_ISDIR(s_buf.st_mode)) {
++                currentpath[len]     = '/';
++                currentpath[len + 1] = '\0';
++                strcat(currentpath, G.ftp_arg);
++            }
++            else if (S_ISREG(s_buf.st_mode)) {
++                totalnum = 1;
++                return;
++            }
++        }
++        else {
++            totalnum = 0;
++            return;
++        }
++    }
++    dire = opendir(currentpath);
++    if (dire == NULL)
++        return 0;
++    while ((ptr = readdir(dire)) != NULL)
++        totalnum++;
++    closedir(dire);
++    return 0;
++}
++
+ int ftpd_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int ftpd_main(int argc UNUSED_PARAM, char **argv)
+ {
+@@ -1180,7 +1379,8 @@ int ftpd_main(int argc UNUSED_PARAM, char **argv)
+ 	unsigned verbose_S;
+ 	smallint opts;
+ 
+-	INIT_G();
++    int value = 0;
++    INIT_G();
+ 
+ 	abs_timeout = 1 * 60 * 60;
+ 	verbose_S = 0;
+@@ -1296,13 +1496,14 @@ int ftpd_main(int argc UNUSED_PARAM, char **argv)
+ #endif
+ 	argv += optind;
+ 	if (argv[0]) {
+-		const char *basedir = argv[0];
++        // const char *basedir = argv[0];
++        basedir = argv[0];
+ #if !BB_MMU
+ 		G.root_fd = xopen("/", O_RDONLY | O_DIRECTORY);
+ 		close_on_exec_on(G.root_fd);
+ #endif
+ 		if (chroot(basedir) == 0)
+-			basedir = "/";
++        // basedir = "/";
+ #if !BB_MMU
+ 		else {
+ 			close(G.root_fd);
+@@ -1362,50 +1563,49 @@ int ftpd_main(int argc UNUSED_PARAM, char **argv)
+ 	 * respectively."
+ 	 */
+ 
+-	while (1) {
+-		uint32_t cmdval = cmdio_get_cmd_and_arg();
+-
+-		if (cmdval == const_QUIT) {
+-			WRITE_OK(FTP_GOODBYE);
+-			return 0;
+-		}
+-		else if (cmdval == const_USER)
+-			/* This would mean "ok, now give me PASS". */
+-			/*WRITE_OK(FTP_GIVEPWORD);*/
+-			/* vsftpd can be configured to not require that,
+-			 * and this also saves one roundtrip:
+-			 */
+-			WRITE_OK(FTP_LOGINOK);
+-		else if (cmdval == const_PASS)
+-			WRITE_OK(FTP_LOGINOK);
+-		else if (cmdval == const_NOOP)
+-			WRITE_OK(FTP_NOOPOK);
+-		else if (cmdval == const_TYPE)
+-			WRITE_OK(FTP_TYPEOK);
+-		else if (cmdval == const_STRU)
+-			WRITE_OK(FTP_STRUOK);
+-		else if (cmdval == const_MODE)
+-			WRITE_OK(FTP_MODEOK);
+-		else if (cmdval == const_ALLO)
+-			WRITE_OK(FTP_ALLOOK);
+-		else if (cmdval == const_SYST)
+-			cmdio_write_raw(STR(FTP_SYSTOK)" UNIX Type: L8\r\n");
+-		else if (cmdval == const_PWD || cmdval == const_XPWD)
+-			handle_pwd();
+-		else if (cmdval == const_CWD)
+-			handle_cwd();
+-		else if (cmdval == const_CDUP) /* cd .. */
+-			handle_cdup();
+-		/* HELP is nearly useless, but we can reuse FEAT for it */
+-		/* lftp uses FEAT */
+-		else if (cmdval == const_HELP || cmdval == const_FEAT)
+-			handle_feat(cmdval == const_HELP
+-					? STRNUM32(FTP_HELP)
+-					: STRNUM32(FTP_STATOK)
+-			);
+-		else if (cmdval == const_LIST) /* ls -l */
+-			handle_list();
+-		else if (cmdval == const_NLST) /* "name list", bare ls */
++    memcpy(list_buff, basedir, strlen(basedir));
++    while (1) {
++        uint32_t cmdval = cmdio_get_cmd_and_arg();
++        if (cmdval == const_QUIT) {
++        WRITE_OK(FTP_GOODBYE);
++        return 0;
++        }
++        else if (cmdval == const_USER)
++        /* This would mean "ok, now give me PASS". */
++        /*WRITE_OK(FTP_GIVEPWORD);*/
++        /* vsftpd can be configured to not require that,
++         * and this also saves one roundtrip:
++         */
++        WRITE_OK(FTP_LOGINOK);
++        else if (cmdval == const_PASS)
++        WRITE_OK(FTP_LOGINOK);
++        else if (cmdval == const_NOOP)
++        WRITE_OK(FTP_NOOPOK);
++        else if (cmdval == const_TYPE)
++        WRITE_OK(FTP_TYPEOK);
++        else if (cmdval == const_STRU)
++        WRITE_OK(FTP_STRUOK);
++        else if (cmdval == const_MODE)
++        WRITE_OK(FTP_MODEOK);
++        else if (cmdval == const_ALLO)
++        WRITE_OK(FTP_ALLOOK);
++        else if (cmdval == const_SYST)
++        cmdio_write_raw(STR(FTP_SYSTOK) " UNIX Type: L8\r\n");
++        else if (cmdval == const_PWD || cmdval == const_XPWD)
++        handle_pwd();
++        else if (cmdval == const_CWD)
++        handle_cwd();
++        else if (cmdval == const_CDUP) /* cd .. */
++        handle_cdup();
++        /* HELP is nearly useless, but we can reuse FEAT for it */
++        /* lftp uses FEAT */
++        else if (cmdval == const_HELP || cmdval == const_FEAT)
++        handle_feat(cmdval == const_HELP ? STRNUM32(FTP_HELP) : STRNUM32(FTP_STATOK));
++        else if (cmdval == const_LIST) { /* ls -l */
++        GetTheNumberOfCurrentPath();
++        handle_list();
++        }
++        else if (cmdval == const_NLST) /* "name list", bare ls */
+ 			handle_nlst();
+ 		/* SIZE is crucial for wget's download indicator etc */
+ 		/* Mozilla, lftp use MDTM (presumably for caching) */
+@@ -1472,5 +1672,5 @@ int ftpd_main(int argc UNUSED_PARAM, char **argv)
+ #endif
+ 			cmdio_write_raw(STR(FTP_BADCMD)" Unknown command\r\n");
+ 		}
+-	}
++    }
+ }
+diff --git a/shell/ash.c b/shell/ash.c
+index 827643808..d98d58ec9 100644
+--- a/shell/ash.c
++++ b/shell/ash.c
+@@ -5600,20 +5600,20 @@ openredirect(union node *redir)
+ static int
+ savefd(int from)
+ {
+-	int newfd;
+-	int err;
+-
+-	newfd = fcntl(from, F_DUPFD_CLOEXEC, 10);
+-	err = newfd < 0 ? errno : 0;
+-	if (err != EBADF) {
+-		if (err)
+-			ash_msg_and_raise_perror("%d", from);
+-		close(from);
+-		if (F_DUPFD_CLOEXEC == F_DUPFD)
+-			close_on_exec_on(newfd);
+-	}
+-
+-	return newfd;
++	// int newfd;
++	// int err;
++
++	// newfd = fcntl(from, F_DUPFD_CLOEXEC, 10);
++	// err = newfd < 0 ? errno : 0;
++	// if (err != EBADF) {
++	// 	if (err)
++	// 		ash_msg_and_raise_perror("%d", from);
++	// 	close(from);
++	// 	if (F_DUPFD_CLOEXEC == F_DUPFD)
++	// 		close_on_exec_on(newfd);
++	// }
++
++	return from;
+ }
+ static int
+ dup2_or_raise(int from, int to)
+diff --git a/util-linux/fsfreeze.c b/util-linux/fsfreeze.c
+index 6e2ff0a54..6ba039890 100644
+--- a/util-linux/fsfreeze.c
++++ b/util-linux/fsfreeze.c
+@@ -21,7 +21,7 @@
+ //usage:	"Flush and halt writes to MOUNTPOINT"
+ 
+ #include "libbb.h"
+-#include <linux/fs.h>
++//#include <linux/fs.h>
+ 
+ #ifndef FIFREEZE
+ # define FIFREEZE _IOWR('X', 119, int)
+diff --git a/util-linux/fstrim.c b/util-linux/fstrim.c
+index 6d673002f..1f0ba5066 100644
+--- a/util-linux/fstrim.c
++++ b/util-linux/fstrim.c
+@@ -26,7 +26,7 @@
+ //usage:     "\n	-v		Print number of discarded bytes"
+ 
+ #include "libbb.h"
+-#include <linux/fs.h>
++//#include <linux/fs.h>
+ 
+ #ifndef FITRIM
+ struct fstrim_range {
+diff --git a/util-linux/mount.c b/util-linux/mount.c
+index 4e65b6b46..08eff7a84 100644
+--- a/util-linux/mount.c
++++ b/util-linux/mount.c
+@@ -255,9 +255,9 @@
+     * CONFIG_EXTRA_LDLIBS="tirpc"
+     */
+ # endif
+-# include <rpc/rpc.h>
+-# include <rpc/pmap_prot.h>
+-# include <rpc/pmap_clnt.h>
++//# include <rpc/rpc.h>
++//# include <rpc/pmap_prot.h>
++//# include <rpc/pmap_clnt.h>
+ #endif
+ 
+ 
+@@ -818,6 +818,7 @@ static int mount_it_now(struct mntent *mp, unsigned long vfsflags, char *filtero
+ 	return rc;
+ }
+ 
++#if 0
+ #if ENABLE_FEATURE_MOUNT_NFS
+ 
+ /*
+@@ -1912,6 +1913,8 @@ static int nfsmount(struct mntent *mp, unsigned long vfsflags, char *filteropts)
+ 
+ #endif // !ENABLE_FEATURE_MOUNT_NFS
+ 
++#endif
++
+ // Find "...,NAME=NUM,..." in the option string, remove "NAME=NUM" option
+ // and return NUM.
+ // Return 0 if not found.
+@@ -2089,6 +2092,7 @@ static int singlemount(struct mntent *mp, int ignore_busy)
+ 	}
+ 
+ 	// Might this be an NFS filesystem?
++#if 0
+ 	if (!(vfsflags & (MS_BIND | MS_MOVE))
+ 	 && (!mp->mnt_type || is_prefixed_with(mp->mnt_type, "nfs"))
+ 	) {
+@@ -2102,6 +2106,7 @@ static int singlemount(struct mntent *mp, int ignore_busy)
+ 			goto report_error;
+ 		}
+ 	}
++#endif
+ 
+ 	// Look at the file.  (Not found isn't a failure for remount, or for
+ 	// a synthetic filesystem like proc or sysfs.)
+@@ -2151,6 +2156,7 @@ static int singlemount(struct mntent *mp, int ignore_busy)
+ 	// If we know the fstype (or don't need to), jump straight
+ 	// to the actual mount.
+ 	if (mp->mnt_type || (vfsflags & (MS_REMOUNT | MS_BIND | MS_MOVE))) {
++		
+ 		char *next;
+ 		for (;;) {
+ 			next = mp->mnt_type ? strchr(mp->mnt_type, ',') : NULL;
