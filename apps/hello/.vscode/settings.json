@@ -1,5 +1,0 @@
-{
-    "RT-Thread Smart.Program": "hello.elf",
-    "RT-Thread Smart.Target Path": "/root/bin/",
-    "RT-Thread Smart.SDK ROOT": "../.."
-}
