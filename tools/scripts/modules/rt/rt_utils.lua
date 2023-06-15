@@ -66,7 +66,14 @@ function sdk_dir()
 end
 
 function cp_with_symlink(srcpath, dstpath, opt)
-    local option = opt or {symlink = true}
+    local option
+
+    if (os.getenv("--rt-xmake-no-symlink") == "true") then
+        option = opt or {symlink = false}
+    else
+        option = opt or {symlink = true}
+    end
+
     if os.exists(dstpath) then
         os.vrm(dstpath)
     end

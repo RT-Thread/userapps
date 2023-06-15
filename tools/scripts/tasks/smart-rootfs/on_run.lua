@@ -172,6 +172,10 @@ function main()
         local toolchains = string.gsub(target:get("toolchains"), "@", "")
         local rootfs = option.get("output") or rt_utils.rootfs_dir()
 
+        if (option.get("no-symlink")) then
+            os.setenv("--rt-xmake-no-symlink", "true")
+        end
+
         create_rootfs(rootfs)
         deploy_package(rootfs)
         deploy_target(rootfs)

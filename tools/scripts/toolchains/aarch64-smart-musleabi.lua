@@ -26,9 +26,14 @@ toolchain("aarch64-smart-musleabi") -- add toolchain
 do
     set_kind("cross") -- set toolchain kind
     set_description("aarch64 embedded compiler for rt-smart")
+
     on_load(function(toolchain)
         import("rt.private.build.rtflags")
         toolchain:load_cross_toolchain()
+
+        toolchain:set("toolset", "cxx", "aarch64-linux-musleabi-g++")
+        toolchain:set("toolset", "ld", "aarch64-linux-musleabi-gcc")
+
         toolchain:add("cxflags", "-march=armv8-a", {force = true})
 
         local link_type = os.getenv("RT_XMAKE_LINK_TYPE") or "shared"

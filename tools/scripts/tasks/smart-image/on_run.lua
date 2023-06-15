@@ -41,30 +41,26 @@ function make_ext4(size, output, rootfs)
         os.raise("not support arch '%s'", os.arch())
     end
 
-    if rootfs then
-        if path.is_absolute(rootfs) then
-            rootfs_dir = rootfs
-        else
-            rootfs_dir = path.join(os.projectdir(), rootfs)
-        end
-    else
-        rootfs_dir = rt_utils.rootfs_dir()
+    os.vrunv(make_ext4fs_exec, {"-l", size, output, rootfs})
+end
+
+function make_fat(size, output, rootfs)
+    local target
+    local rootfs_dir
+    local fatdisk_exec
+    local fatdisk_dir = path.absolute("../../../fatdisk", os.scriptdir())
+
+    if not os.host() == "linux" then
+        os.raise("not support host '%s'", os.host())
     end
 
-    if path.is_absolute(output) then
-        target = output
+    if os.arch() == "x86_64" then
+        fatdisk_exec = path.join(fatdisk_dir, "fatdisk-x86")
     else
-        target = path.join(os.projectdir(), output)
+        os.raise("not support arch '%s'", os.arch())
     end
 
-    os.execv(make_ext4fs_exec, {"-l", size, target, rootfs_dir})
-
-    if os.isfile(target) then
-        cprint("${dim}> create %s to %s", rootfs_dir, target)
-        cprint('${green}> success create ext4 image${clear}')
-    else
-        cprint('${red}> fail create ext4 image${clear}')
-    end
+    os.vrunv(fatdisk_exec, {"--disk_size=" .. size, "--output=" .. output, "--input=" .. rootfs})
 end
 
 function main()
@@ -72,9 +68,39 @@ function main()
     -- project.load_targets()
 
     local format = option.get("format")
+
+    local size = option.get("size")
+    local output = option.get("output")
+    local rootfs = option.get("rootfs")
+
+    if rootfs then
+        if not path.is_absolute(rootfs) then
+            rootfs = path.join(os.projectdir(), rootfs)
+        end
+    else
+        rootfs = rt_utils.rootfs_dir()
+    end
+
+    if output then
+        if not path.is_absolute(output) then
+            output = path.join(os.projectdir(), output)
+        end
+    else
+        output = path.join(os.projectdir(), config.buildir(), format .. ".img")
+    end
+
     if format == "ext4" then
-        make_ext4(option.get("size"), option.get("output"), option.get("rootfs"))
+        make_ext4(size, output, rootfs)
+    elseif format == "fat" then
+        make_fat(size, output, rootfs)
     else
         os.raise("unsupport format '%s'", format)
+    end
+
+    if os.isfile(output) then
+        cprint("${dim}> create %s to %s", rootfs, output)
+        cprint('${green}> success create %s image${clear}', format)
+    else
+        cprint('${red}> fail create ext4 image${clear}')
     end
 end

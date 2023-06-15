@@ -1,0 +1,48 @@
+--
+-- If you want to known more usage about xmake, please see https://xmake.io
+--
+-- ## FAQ
+--
+-- You can enter the project directory firstly before building project.
+--
+--   $ cd projectdir
+--
+-- 1. How to build project?
+--
+--   $ xmake
+--
+-- 2. change arch?
+--
+--   $ xmake f -a aach64
+--   $ xmake f -a arm
+--   $ xmake f -a riscvgc
+--   $ xmake f -a riscvgcv
+--
+-- 3. build linux host?
+--
+--   $ xmake f --target_os=linux
+--
+-- 4. Add some frequently-used compilation flags in xmake.lua
+--
+-- @code
+--    -- add macro defination
+--    add_defines("NDEBUG", "_GNU_SOURCE=1")
+--
+--    -- set warning all as error
+--    set_warnings("all", "error")
+--
+--    -- set language: c99, c++11
+--    set_languages("c99", "c++11")
+--
+--    -- set optimization: none, faster, fastest, smallest
+--    set_optimize("fastest")
+--
+--    -- add include search directories
+--    add_includedirs("./include")
+--
+--    -- add compilation and link flags
+--    add_cxflags("-stdnolib", "-fno-strict-aliasing")
+--    add_ldflags("-L./lib", "-lpthread", {force = true})
+--
+-- @endcode
+--

@@ -31,9 +31,10 @@ do
         description = "make image",
         options = {
             {"f",   "format",           "kv",   "ext4",                                     "image format",
-                                                                                            "    - ext4"},
-            {"s",   "size",             "kv",   "128M",                                      "image size"},
-            {"o",   "output",           "kv",   "build/ext4.img",                           "output image dir"},
+                                                                                            "    - ext4",
+                                                                                            "    - fat"},
+            {"s",   "size",             "kv",   "256M",                                     "image size"},
+            {"o",   "output",           "kv",   nil,                                        "output image dir"},
             {"r",   "rootfs",           "kv",   nil,                                        "rootfs dir"},
         }
     }
@@ -52,6 +53,7 @@ do
                                                                                             "    - all",
                                                                                             "    - zlib"},
             {"o",   "output",           "kv",   nil,                                        "output dir"},
+            {nil,   "no-symlink",        "k",   nil,                                        "without symbolic link."},
         }
     }
 end

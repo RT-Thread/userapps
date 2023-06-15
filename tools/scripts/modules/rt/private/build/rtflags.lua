@@ -65,7 +65,7 @@ end
 
 function get_sdk()
     if config.get("target_os") ~= "rt-smart" then
-        return {ldflags = {}, cxflags = {}}
+        return {ldflags = {}, ldflags_lib = {}, cxflags = {}}
     end
 
     local sdkdir = rt_utils.sdk_dir()
@@ -74,6 +74,7 @@ function get_sdk()
     local incdir = path.join(sdkdir, "include")
     local libdir = path.join(sdkdir, "lib")
     local cxflags = {}
+    local ldflags_lib = {}
     local ldflags = {}
 
     if arch == "arm" then
@@ -101,6 +102,9 @@ function get_sdk()
         table.insert(ldflags, "-L" .. libdir)
         table.insert(ldflags, "-L" .. path.join(libdir, arch))
     end
+    table.insert(ldflags_lib, "-L" .. libdir)
+    table.insert(ldflags_lib, "-L" .. path.join(libdir, arch))
+
     table.insert(ldflags, "-L" .. path.join(rtdir, "lib", arch))
     table.insert(ldflags, "-Wl,--start-group")
     table.insert(ldflags, "-Wl,-whole-archive")
@@ -108,7 +112,7 @@ function get_sdk()
     table.insert(ldflags, "-Wl,-no-whole-archive")
     table.insert(ldflags, "-Wl,--end-group")
 
-    return {ldflags = ldflags, cxflags = cxflags}
+    return {ldflags = ldflags, ldflags_lib = ldflags_lib, cxflags = cxflags}
 end
 
 function get_package_info(package)
