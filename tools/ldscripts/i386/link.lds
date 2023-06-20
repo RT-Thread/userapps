@@ -48,16 +48,30 @@ SECTIONS
     .ARM.exidx   : { *(.ARM.exidx* .gnu.linkonce.armexidx.*) }
     __exidx_end = .;
 
-    .plt :
+    .rela.dyn :
     {
-        *(*.plt)
+        *(.rela.init)
+        *(.rela.text .rela.text.* .rela.gnu.linkonce.t.*)
+        *(.rela.fini)
+        *(.rela.rodata .rela.rodata.* .rela.gnu.linkonce.r.*)
+        *(.rela.data .rela.data.* .rela.gnu.linkonce.d.*)
+        *(.rela.tdata .rela.tdata.* .rela.gnu.linkonce.td.*)
+        *(.rela.tbss .rela.tbss.* .rela.gnu.linkonce.tb.*)
+        *(.rela.ctors)
+        *(.rela.dtors)
+        *(.rela.got)
+        *(.rela.bss .rela.bss.* .rela.gnu.linkonce.b.*)
+        *(.rela.ifunc)
     }
-    .got :
+    .rela.plt :
     {
-        __got_start__ = .;
-        *(*.got)
-        __got_end__ = .;
+        *(.rela.plt)
+        *(.rela.iplt)
     }
+    .plt : ALIGN(16) { *(.plt) *(.iplt) }
+    .dynamic : { *(.dynamic) }
+    .got : { *(.got) *(.igot) }
+    .got.plt : { *(.got.plt) *(.igot.plt) }
 
     data :
     {

@@ -102,6 +102,23 @@ index a48782832..fb8860ca6 100644
  
  #define bb_path_passwd_file  _PATH_PASSWD
  #define bb_path_group_file   _PATH_GROUP
+diff --git a/init/halt.c b/init/halt.c
+index fe3cb9e75..a039708ae 100644
+--- a/init/halt.c
++++ b/init/halt.c
+@@ -222,9 +222,12 @@ int halt_main(int argc UNUSED_PARAM, char **argv)
+ 			/* talk to init */
+ 			if (!ENABLE_FEATURE_CALL_TELINIT) {
+ 				/* bbox init assumed */
++				#if 0
+ 				rc = kill(1, signals[which]);
+ 				if (init_was_not_there())
+ 					rc = kill(1, signals[which]);
++				#endif
++				rc = reboot(magic[which]);
+ 			} else {
+ 				/* SysV style init assumed */
+ 				/* runlevels:
 diff --git a/libbb/copyfd.c b/libbb/copyfd.c
 index 7f9d92ea9..e88c62e5a 100644
 --- a/libbb/copyfd.c
