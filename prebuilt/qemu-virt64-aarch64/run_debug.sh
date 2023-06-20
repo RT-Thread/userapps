@@ -23,4 +23,6 @@ qemu-system-aarch64 \
     -device virtio-net-device,netdev=net0,bus=virtio-mmio-bus.1 \
     -device virtio-serial-device \
     -chardev socket,host=127.0.0.1,port=43211,server=on,wait=off,telnet=on,id=console0 \
-    -device virtserialport,chardev=console0
+    -device virtserialport,chardev=console0 \
+    -S \
+    -gdb tcp::1234
