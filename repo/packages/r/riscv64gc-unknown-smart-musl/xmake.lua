@@ -30,12 +30,12 @@ do
         add_urls(
             "https://download.rt-thread.org/rt-smart/riscv64/riscv64-linux-musleabi_for_i686-w64-mingw32_$(version).zip")
 
-        add_versions("165989", "df31a863456034d9f0ee91215d036d5903def407f65d8ab6b1ed022fdc651d79")
+        add_versions("180881", "7b385fe663559985d70936832dc0f6c017ce3bddbdbfaff673996cc3a20faf6c")
     elseif is_host("linux") then
         add_urls(
             "https://download.rt-thread.org/rt-smart/riscv64/riscv64-linux-musleabi_for_x86_64-pc-linux-gnu_$(version).tar.bz2")
 
-        add_versions("165989", "c723709e48ea6d42573f960378afebbf6c8bcd529772d346d694345187ab421b")
+        add_versions("180881", "21ad2cbd9b4e73e61efd8211b88c3989acaa033a374ac2f26b4e15a7ec7370b6")
     end
 
     on_install("@windows", "@linux|x86_64", function(package)

@@ -45,7 +45,6 @@ add_repositories("rt-smart-repo " .. dir .. "../../repo")
 
 local archs = {
     aarch64 = "aarch64-smart-musleabi",
-    arm64 = "aarch64-smart-musleabi",
     arm = "arm-smart-musleabi",
     riscv64gc = "riscv64gc-unknown-smart-musl"
 }

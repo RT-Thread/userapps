@@ -120,11 +120,12 @@ function get_package_info(package)
 
     rtn.toolchains = get_real_toolchains(package:configs().toolchains)
     rtn.version = package:version_str()
-    rtn.host = string.gsub(rtn.toolchains, "smart", "linux") -- TODO: should replace, when toolchains renamed
     rtn.cc, _ = package:tool("cc")
     rtn.cxx, _ = package:tool("cxx")
     rtn.arch = get_real_arch()
     rtn.toolchainsdir = path.directory(rtn.cc)
+    rtn.host = string.gsub(path.basename(rtn.cc), "smart", "linux") -- TODO: should replace, when toolchains renamed
+    rtn.host = string.gsub(rtn.host, "-gcc", "")
 
     if rtn.arch == "aarch64" then
         rtn.cpu = "armv8-a"

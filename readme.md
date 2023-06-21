@@ -71,10 +71,10 @@ xmake 是一个基于 Lua 的轻量级跨平台构建工具，使用 xmake.lua �
 
 5. **镜像制作**
 
-   运行 `xmake smart-rootfs --no-symlink` 制作 rootfs ，运行 `xmake smart-image` 制作镜像
+   运行 `xmake smart-rootfs` 制作 rootfs ，运行 `xmake smart-image` 制作镜像
 
    ```shell
-   xmake smart-rootfs --no-symlink # 制作无符号链接的rootfs
+   xmake smart-rootfs
    xmake smart-image -o ../prebuilt/qemu-virt64-aarch64/ext4.img # 将镜像输出至 qemu-virt64-aarch64 目录
    ```
 

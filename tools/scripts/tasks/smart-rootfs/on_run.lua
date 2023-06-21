@@ -22,9 +22,10 @@
 --
 import("core.project.config")
 import("core.project.project")
-import("core.package.package")
 import("core.base.option")
 import("rt.rt_utils")
+import("private.action.require.impl.utils.get_requires")
+import("private.action.require.impl.package")
 
 function create_dir(dir)
     if not os.exists(dir) then
@@ -48,16 +49,21 @@ function create_rootfs(rootfs)
 end
 
 function deploy_package(rootfs)
-    local rootdir = path.absolute("../../../../repo", os.scriptdir())
-    for pkgname, pkg in pairs(project:required_packages()) do
-        local packagename = string.match(pkgname, "[^@~]+")
+    local requires, requires_extra = get_requires()
+    for _, instance in ipairs(package.load_packages(requires, {requires_extra = requires_extra})) do
+        local requireinfo = instance:requireinfo()
+        local repo = instance:repo()
+        local packagename = requireinfo.originstr
+        local installdir = instance:installdir()
+        local repodir = repo:url()
+        local reponame = repo:name()
         local deploy_script =
-            path.join(rootdir, "packages", packagename:sub(1, 1), packagename, "scripts", "deploy.lua")
+            path.join(repodir, "packages", packagename:sub(1, 1), packagename, "scripts", "deploy.lua")
         if os.isfile(deploy_script) then
             vprint("run script => '%s'", deploy_script)
-            import("deploy", {rootdir = path.directory(deploy_script)}).main(rootfs, pkg:installdir())
+            import("deploy", {rootdir = path.directory(deploy_script)}).main(rootfs, installdir)
         end
-        local package_rootfs = path.join(rootdir, "packages", packagename:sub(1, 1), packagename, "rootfs")
+        local package_rootfs = path.join(repodir, "packages", packagename:sub(1, 1), packagename, "rootfs")
         if os.isdir(package_rootfs) then
             for _, filedir in ipairs(os.filedirs(package_rootfs .. "/*")) do
                 os.vrunv("cp", {"-rfv", filedir, rootfs})
@@ -67,14 +73,19 @@ function deploy_package(rootfs)
 end
 
 function export_package_to_sdkdir(sdkdir)
-    local rootdir = path.absolute("../../../../repo", os.scriptdir())
-    for pkgname, pkg in pairs(project:required_packages()) do
-        local packagename = string.match(pkgname, "[^@~]+")
+    local requires, requires_extra = get_requires()
+    for _, instance in ipairs(package.load_packages(requires, {requires_extra = requires_extra})) do
+        local requireinfo = instance:requireinfo()
+        local packagename = requireinfo.originstr
+        local repo = instance:repo()
+        local repodir = repo:url()
+        local reponame = repo:name()
+        local installdir = instance:installdir()
         local export_script =
-            path.join(rootdir, "packages", packagename:sub(1, 1), packagename, "scripts", "export.lua")
+            path.join(repodir, "packages", packagename:sub(1, 1), packagename, "scripts", "export.lua")
         if os.isfile(export_script) then
             vprint("run script => '%s'", export_script)
-            import("export", {rootdir = path.directory(export_script)}).main(sdkdir, pkg:installdir())
+            import("export", {rootdir = path.directory(export_script)}).main(sdkdir, installdir)
         end
     end
 end
