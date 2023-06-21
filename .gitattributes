@@ -25,6 +25,7 @@ xfel binary
 make_ext4fs* binary
 *.deb binary
 *.bin binary
+*.img binary
 
 # These should also not be modified by git.
 *.svg -text
