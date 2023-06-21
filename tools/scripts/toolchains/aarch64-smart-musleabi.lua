@@ -38,7 +38,7 @@ do
 
         local link_type = os.getenv("RT_XMAKE_LINK_TYPE") or "shared"
         if link_type == "static" then
-            toolchain:add("ldflags", "-static", {force = true})
+            toolchain:add("ldflags", "--static", {force = true})
             local ldscript = rtflags.get_ldscripts(false)
             toolchain:add("ldflags", ldscript.ldflags, {force = true})
         else

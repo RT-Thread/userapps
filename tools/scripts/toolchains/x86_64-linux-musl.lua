@@ -26,7 +26,7 @@ do
     set_description("x86_64 cross compiler for linux.")
     on_load(function(toolchain)
         toolchain:load_cross_toolchain()
-        toolchain:add("ldflags", "-static", {force = true})
+        toolchain:add("ldflags", "--static", {force = true})
     end)
 end
 toolchain_end()
