@@ -22,7 +22,7 @@
 --
 add_rules("mode.debug", "mode.release")
 
-target("ping")
+target("shm_ping")
 do
     add_rules("rt.sdk")
     add_files("*.c")

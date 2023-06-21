@@ -22,7 +22,7 @@
 --
 add_rules("mode.debug", "mode.release")
 
-target("pong")
+target("shm_pong")
 do
     add_rules("rt.sdk")
     add_files("*.c")
