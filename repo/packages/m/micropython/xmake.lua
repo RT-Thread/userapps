@@ -33,9 +33,13 @@ do
                 "d0eb05d02339977f9c5771dcc81d2a616962ec57cb4d272fe8da3b8b22cc830c")
 
     add_configs("shared", {description = "Build shared library.", default = true, type = "boolean"})
+    add_configs("with_ffi", {description = "use libffi library.", default = false, type = "boolean"})
 
     on_load(function(package)
-        package:add("deps", "libffi", {debug = package:config("debug"), configs = {shared = package:config("shared")}})
+        if package:config("with_ffi") then
+            package:add("deps", "libffi",
+                        {debug = package:config("debug"), configs = {shared = package:config("shared")}})
+        end
     end)
 
     on_install("cross@linux", function(package)
@@ -48,8 +52,12 @@ do
         local cxflags = {}
         local packagedeps = {}
 
-        table.insert(cxflags, "-DMICROPY_FORCE_PLAT_ALLOC_EXEC=0")
-        table.insert(packagedeps, "libffi")
+        if package:config("with_ffi") then
+            table.insert(cxflags, "-DMICROPY_FORCE_PLAT_ALLOC_EXEC=0")
+            table.insert(packagedeps, "libffi")
+        else
+            io.gsub("ports/unix/mpconfigport.mk", "MICROPY_PY_FFI =.-\n", 'MICROPY_PY_FFI = 0')
+        end
 
         os.setenv("PATH", path.directory(cc) .. ":" .. os.getenv("PATH"))
 
