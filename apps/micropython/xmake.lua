@@ -22,7 +22,7 @@
 --
 add_rules("mode.debug", "mode.release")
 
-add_requires("micropython")
+add_requires("micropython", {configs = {shared = false}})
 
 target("micropython")
 do
