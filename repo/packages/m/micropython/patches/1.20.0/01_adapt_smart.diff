@@ -1,0 +1,26 @@
+diff --git a/ports/unix/mpconfigport.h b/ports/unix/mpconfigport.h
+index 8eafb6119..04d284e8f 100644
+--- a/ports/unix/mpconfigport.h
++++ b/ports/unix/mpconfigport.h
+@@ -43,7 +43,7 @@
+ #if defined(__APPLE__) && defined(__MACH__)
+     #define MICROPY_PY_SYS_PLATFORM  "darwin"
+ #else
+-    #define MICROPY_PY_SYS_PLATFORM  "linux"
++    #define MICROPY_PY_SYS_PLATFORM  "rt-smart"
+ #endif
+ #endif
+ 
+diff --git a/ports/unix/mpconfigport.mk b/ports/unix/mpconfigport.mk
+index ce6183c13..f98769960 100644
+--- a/ports/unix/mpconfigport.mk
++++ b/ports/unix/mpconfigport.mk
+@@ -9,7 +9,7 @@ MICROPY_FORCE_32BIT = 0
+ MICROPY_USE_READLINE = 1
+ 
+ # btree module using Berkeley DB 1.xx
+-MICROPY_PY_BTREE = 1
++MICROPY_PY_BTREE = 0
+ 
+ # _thread module using pthreads
+ MICROPY_PY_THREAD = 1
