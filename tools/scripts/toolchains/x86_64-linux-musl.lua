@@ -26,6 +26,10 @@ do
     set_description("x86_64 cross compiler for linux.")
     on_load(function(toolchain)
         toolchain:load_cross_toolchain()
+
+        toolchain:set("toolset", "cxx", "x86_64-linux-musl-g++")
+        toolchain:set("toolset", "ld", "x86_64-linux-musl-gcc")
+
         toolchain:add("ldflags", "--static", {force = true})
     end)
 end
