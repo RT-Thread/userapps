@@ -86,7 +86,7 @@ xmake 是一个基于 Lua 的轻量级跨平台构建工具，使用 xmake.lua �
 
    ```shell
    cd prebuilt/qemu-virt64-aarch64/
-   ./qemu.sh
+   ./run.sh
    ```
 
    ![image-20230531174321326](./assets/image-20230531174321326.png)
