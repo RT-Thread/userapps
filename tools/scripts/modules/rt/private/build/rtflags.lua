@@ -53,7 +53,7 @@ function get_ldscripts(shared)
 
     if not shared then
         table.insert(ldflags, "-n")
-        table.insert(ldflags, "-static")
+        table.insert(ldflags, "--static")
     end
 
     local linkerscript = path.join(rootdir, arch, "link" .. (shared and ".so" or "") .. ".lds")
