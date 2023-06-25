@@ -23,11 +23,17 @@
 rule("rt.cpp")
 do
     on_config(function(target)
+        import("core.project.config")
         import("rt.private.build.rtflags")
-        local flags = rtflags.get_sdk()
 
+        local flags = rtflags.get_sdk()
         local cxx, _ = target:tool("cxx")
         target:set("toolset", "ld", cxx)
+
+        if config.get("target_os") ~= "rt-smart" then
+            return
+        end
+
         target:add("ldflags", flags.ldflags_lib, {force = true})
         target:add("ldflags", "-lcxx", {force = true})
     end)
