@@ -37,8 +37,9 @@ do
             {'f',   "force",    "k",    nil,                        "Force to create project in a non-empty directory."},
             {'t',   "template", "kv",   "helloworld",               "Select the project template id or name of the given language.",
                                                                     '    - helloworld: Create "hello world" project',
-                                                                    '    - lib: Create a lib project based on "zlib"',
+                                                                    '    - lib: Create a lib project based on "<package>"',
                                                                     '    - app: Create a app project based on "busybox"'},
+            {'p',   "package",  "kv",   "zlib",                     "Force to create project in a non-empty directory."},
             {},
             {nil,   "target",   "v",    nil,                        "Create the given target.",
                                                                     "Uses the project name as target if not exists."}
