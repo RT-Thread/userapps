@@ -129,6 +129,8 @@ function get_package_info(package)
 
     if rtn.arch == "aarch64" then
         rtn.cpu = "armv8-a"
+    else
+        rtn.cpu = ""
     end
 
     vprint(rtn)
