@@ -1,0 +1,1382 @@
+diff --git a/configure.ac b/configure.ac
+index b7e519b8f..a0b2ddcdf 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -2281,6 +2281,48 @@ AS_HELP_STRING([--enable-kmsdrm-shared], [dynamically load kmsdrm support [[defa
+     fi
+ }
+ 
++CheckRttVideo()
++{
++    AC_ARG_ENABLE(video-rtt,
++AS_HELP_STRING([--enable-video-rtt], [use rt-smart video driver [[default=yes]]]),
++                  , enable_video_rtt=yes)
++    if test x$enable_video_rtt = xyes; then
++        AC_DEFINE(SDL_VIDEO_DRIVER_RTT, 1, [ ])
++        SOURCES="$SOURCES $srcdir/src/video/rtt/*.c"
++        have_video=yes
++    fi
++}
++
++CheckRttVideoVirtioGpu()
++{
++    AC_ARG_ENABLE(video-rtt-virtio-gpu,
++AS_HELP_STRING([--enable-video-rtt-virtio-gpu], [use rt-smart video virtio-gpu driver [[default=no]]]),
++                  , enable_video_rtt_virtio_gpu=no)
++    if test x$enable_video_rtt_virtio_gpu = xyes; then
++        AC_DEFINE(SDL_VIDEO_DRIVER_RTT_VIRTIO_GPU, 1, [ ])
++    fi
++}
++
++CheckRttVideoFbdev()
++{
++    AC_ARG_ENABLE(video-rtt-fbdev,
++AS_HELP_STRING([--enable-video-rtt-fbdev], [use rt-smart video fbdev driver [[default=no]]]),
++                  , enable_video_rtt_fbdev=no)
++    if test x$enable_video_rtt_fbdev = xyes; then
++        AC_DEFINE(SDL_VIDEO_DRIVER_RTT_FBDEV, 1, [ ])
++    fi
++}
++
++CheckRttVideoTouch()
++{
++    AC_ARG_ENABLE(video-rtt-touch,
++AS_HELP_STRING([--enable-video-rtt-touch], [use rt-smart video touch driver [[default=no]]]),
++                  , enable_video_rtt_touch=no)
++    if test x$enable_video_rtt_touch = xyes; then
++        AC_DEFINE(SDL_VIDEO_DRIVER_RTT_TOUCH, 1, [ ])
++    fi
++}
++
+ dnl rcg04172001 Set up the Null video driver.
+ CheckDummyVideo()
+ {
+@@ -3536,6 +3578,10 @@ case "$host" in
+         CheckVisibilityHidden
+         CheckDeclarationAfterStatement
+         CheckDummyVideo
++        CheckRttVideo
++        CheckRttVideoVirtioGpu
++        CheckRttVideoFbdev
++        CheckRttVideoTouch
+         CheckDiskAudio
+         CheckDummyAudio
+         CheckDLOPEN
+diff --git a/include/SDL_config.h.in b/include/SDL_config.h.in
+index 3a2a7149d..24e3f2e29 100644
+--- a/include/SDL_config.h.in
++++ b/include/SDL_config.h.in
+@@ -344,6 +344,10 @@
+ #undef SDL_VIDEO_DRIVER_DIRECTFB
+ #undef SDL_VIDEO_DRIVER_DIRECTFB_DYNAMIC
+ #undef SDL_VIDEO_DRIVER_DUMMY
++#undef SDL_VIDEO_DRIVER_RTT
++#undef SDL_VIDEO_DRIVER_RTT_VIRTIO_GPU
++#undef SDL_VIDEO_DRIVER_RTT_FBDEV
++#undef SDL_VIDEO_DRIVER_RTT_TOUCH
+ #undef SDL_VIDEO_DRIVER_WINDOWS
+ #undef SDL_VIDEO_DRIVER_WAYLAND
+ #undef SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH
+diff --git a/src/core/linux/SDL_evdev_capabilities.h b/src/core/linux/SDL_evdev_capabilities.h
+index e9c66c05f..a0021cca4 100644
+--- a/src/core/linux/SDL_evdev_capabilities.h
++++ b/src/core/linux/SDL_evdev_capabilities.h
+@@ -25,7 +25,7 @@
+ #ifndef SDL_evdev_capabilities_h_
+ #define SDL_evdev_capabilities_h_
+ 
+-#if HAVE_LIBUDEV_H || defined(SDL_JOYSTICK_LINUX)
++#if HAVE_LIBUDEV_H || defined(SDL_JOYSTICK_LINUX) || defined(SDL_HAPTIC_LINUX)
+ 
+ #include <linux/input.h>
+ 
+diff --git a/src/events/SDL_quit.c b/src/events/SDL_quit.c
+index d210fdba0..17d4215ae 100644
+--- a/src/events/SDL_quit.c
++++ b/src/events/SDL_quit.c
+@@ -35,6 +35,8 @@
+ #define HAVE_SIGNAL_SUPPORT 1
+ #endif
+ 
++#define SDL_FOREGROUNDING_SIGNAL 1
++
+ #ifdef HAVE_SIGNAL_SUPPORT
+ static SDL_bool disable_signals = SDL_FALSE;
+ static SDL_bool send_quit_pending = SDL_FALSE;
+@@ -44,7 +46,7 @@ static SDL_bool send_backgrounding_pending = SDL_FALSE;
+ #endif
+ 
+ #ifdef SDL_FOREGROUNDING_SIGNAL
+-static SDL_bool send_foregrounding_pending = SDL_FALSE;
++static SDL_bool send_foregrounding_pending = SDL_TRUE;
+ #endif
+ 
+ static void
+diff --git a/src/video/SDL_sysvideo.h b/src/video/SDL_sysvideo.h
+index c8c425b6b..38d3979e4 100644
+--- a/src/video/SDL_sysvideo.h
++++ b/src/video/SDL_sysvideo.h
+@@ -439,6 +439,7 @@ extern VideoBootStrap QNX_bootstrap;
+ extern VideoBootStrap OFFSCREEN_bootstrap;
+ extern VideoBootStrap OS2DIVE_bootstrap;
+ extern VideoBootStrap OS2VMAN_bootstrap;
++extern VideoBootStrap RTT_bootstrap;
+ 
+ extern SDL_VideoDevice *SDL_GetVideoDevice(void);
+ extern int SDL_AddBasicVideoDisplay(const SDL_DisplayMode * desktop_mode);
+diff --git a/src/video/SDL_video.c b/src/video/SDL_video.c
+index a0ca32243..b9990236c 100644
+--- a/src/video/SDL_video.c
++++ b/src/video/SDL_video.c
+@@ -119,6 +119,9 @@ static VideoBootStrap *bootstrap[] = {
+ #endif
+ #if SDL_VIDEO_DRIVER_DUMMY
+     &DUMMY_bootstrap,
++#endif
++#if SDL_VIDEO_DRIVER_RTT
++    &RTT_bootstrap,
+ #endif
+     NULL
+ };
+@@ -462,6 +465,7 @@ SDL_GetVideoDriver(int index)
+     return NULL;
+ }
+ 
++
+ /*
+  * Initialize the video and event subsystems -- determine native pixel format
+  */
+diff --git a/src/video/rtt/SDL_rttcommon.h b/src/video/rtt/SDL_rttcommon.h
+new file mode 100644
+index 000000000..8bc85fe7b
+--- /dev/null
++++ b/src/video/rtt/SDL_rttcommon.h
+@@ -0,0 +1,43 @@
++/*
++ * Copyright (c) 2006-2021, RT-Thread Development Team
++ *
++ * SPDX-License-Identifier: GPL-2.0
++ *
++ * Change Logs:
++ * Date           Author       Notes
++ * 2023-02-12     xqyjlj       adapt rt-smart
++ */
++
++#ifndef __SDL_RTTCOMMON_H__
++#define __SDL_RTTCOMMON_H__
++
++#include "../../SDL_internal.h"
++#include "SDL_surface.h"
++
++#if SDL_VIDEO_DRIVER_RTT
++
++#if SDL_VIDEO_DRIVER_RTT_VIRTIO_GPU && SDL_VIDEO_DRIVER_RTT_FBDEV
++#error "only use one of them"
++#endif
++
++#if !SDL_VIDEO_DRIVER_RTT_VIRTIO_GPU && !SDL_VIDEO_DRIVER_RTT_FBDEV
++#error "must use one of them"
++#endif
++
++#define RTT_SDL_FORMAT SDL_PIXELFORMAT_BGR888
++
++#if SDL_VIDEO_DRIVER_RTT_VIRTIO_GPU
++
++#ifndef HAVE_CCONFIG_H
++#define HAVE_CCONFIG_H
++#endif
++
++#include "rtthread.h"
++
++#define RTT_FORMAT                 RTGRAPHIC_PIXEL_FORMAT_RGB888
++
++#endif
++
++#endif
++
++#endif
+diff --git a/src/video/rtt/SDL_rttframebuffer.c b/src/video/rtt/SDL_rttframebuffer.c
+new file mode 100755
+index 000000000..b20219c0d
+--- /dev/null
++++ b/src/video/rtt/SDL_rttframebuffer.c
+@@ -0,0 +1,76 @@
++/*
++ * Copyright (c) 2006-2021, RT-Thread Development Team
++ *
++ * SPDX-License-Identifier: GPL-2.0
++ *
++ * Change Logs:
++ * Date           Author       Notes
++ * 2021-1-14      eason        The first version
++ */
++
++#include "../../SDL_internal.h"
++
++#include "../SDL_sysvideo.h"
++#include "SDL_rttcommon.h"
++#include "SDL_rttframebuffer.h"
++#include "SDL_rttscreen.h"
++
++#if SDL_VIDEO_DRIVER_RTT
++
++#define RTT_SURFACE "_SDL_RttSurface"
++
++extern uint32_t g_sdl_rtt_pixel_format;
++
++int SDL_RTT_CreateWindowFramebuffer(_THIS, SDL_Window *window, Uint32 *format, void **pixels, int *pitch)
++{
++    SDL_Surface *surface;
++    int          w, h;
++    int          bpp;
++    Uint32       Rmask, Gmask, Bmask, Amask;
++    /* Free the old framebuffer surface */
++    surface = (SDL_Surface *)SDL_GetWindowData(window, RTT_SURFACE);
++    SDL_FreeSurface(surface);
++
++    /* Create a new one */
++    SDL_PixelFormatEnumToMasks(g_sdl_rtt_pixel_format, &bpp, &Rmask, &Gmask, &Bmask, &Amask);
++    SDL_GetWindowSize(window, &w, &h);
++    surface = SDL_CreateRGBSurface(0, w, h, bpp, Rmask, Gmask, Bmask, Amask);
++    if(!surface)
++    {
++        return -1;
++    }
++    /* Save the info and return! */
++    SDL_SetWindowData(window, RTT_SURFACE, surface);
++    *format = g_sdl_rtt_pixel_format;
++    *pixels = surface->pixels;
++    *pitch  = surface->pitch;
++    return 0;
++}
++
++int SDL_RTT_UpdateWindowFramebuffer(_THIS, SDL_Window *window, const SDL_Rect *rects, int numrects)
++{
++    static int   frame_number;
++    SDL_Surface *surface;
++    surface = (SDL_Surface *)SDL_GetWindowData(window, RTT_SURFACE);
++    if(!surface)
++    {
++        return SDL_SetError("Couldn't find rtt surface for window");
++    }
++    if(SDL_getenv("SDL_VIDEO_RTT_SAVE_FRAMES"))
++    {
++        char file[128];
++        SDL_snprintf(file, sizeof(file), "SDL_window%d-%8.8d.bmp", SDL_GetWindowID(window), ++frame_number);
++        SDL_SaveBMP(surface, file);
++    }
++    RTT_surface2screen(surface, window->x, window->y);
++    return 0;
++}
++
++void SDL_RTT_DestroyWindowFramebuffer(_THIS, SDL_Window *window)
++{
++    SDL_Surface *surface;
++    surface = (SDL_Surface *)SDL_SetWindowData(window, RTT_SURFACE, NULL);
++    SDL_FreeSurface(surface);
++}
++
++#endif
+diff --git a/src/video/rtt/SDL_rttframebuffer.h b/src/video/rtt/SDL_rttframebuffer.h
+new file mode 100755
+index 000000000..d0de80f8d
+--- /dev/null
++++ b/src/video/rtt/SDL_rttframebuffer.h
+@@ -0,0 +1,18 @@
++/*
++ * Copyright (c) 2006-2021, RT-Thread Development Team
++ *
++ * SPDX-License-Identifier: GPL-2.0
++ *
++ * Change Logs:
++ * Date           Author       Notes
++ * 2021-1-14      eason        The first version
++ */
++
++#ifndef __SDL_RTTFRAMEBUFFER_H__
++#define __SDL_RTTFRAMEBUFFER_H__
++
++int  SDL_RTT_CreateWindowFramebuffer(_THIS, SDL_Window *window, Uint32 *format, void **pixels, int *pitch);
++int  SDL_RTT_UpdateWindowFramebuffer(_THIS, SDL_Window *window, const SDL_Rect *rects, int numrects);
++void SDL_RTT_DestroyWindowFramebuffer(_THIS, SDL_Window *window);
++
++#endif
+diff --git a/src/video/rtt/SDL_rttkeyboard.c b/src/video/rtt/SDL_rttkeyboard.c
+new file mode 100644
+index 000000000..5f432e366
+--- /dev/null
++++ b/src/video/rtt/SDL_rttkeyboard.c
+@@ -0,0 +1,46 @@
++/*
++ * Copyright (c) 2006-2021, RT-Thread Development Team
++ *
++ * SPDX-License-Identifier: GPL-2.0
++ *
++ * Change Logs:
++ * Date           Author       Notes
++ * 2023-02-12     xqyjlj       adapt rt-smart
++ */
++
++#include "../../SDL_internal.h"
++
++#include "../../events/SDL_keyboard_c.h"
++#include "SDL_keyboard.h"
++#include "SDL_rttkeyboard.h"
++
++#if SDL_VIDEO_DRIVER_RTT
++
++void RTT_InitKeyboard(void)
++{
++    // TODO
++}
++
++int RTT_HeldKeyboardCode(int index)
++{
++    // TODO
++    return 0;
++}
++
++int RTT_GetKeyboardCode(int keycode)
++{
++    // TODO
++    return 0;
++}
++
++void RTT_PollKeyboard(void)
++{
++    // TODO
++}
++
++void RTT_QuitKeyboard(void)
++{
++    // TODO
++}
++
++#endif
+diff --git a/src/video/rtt/SDL_rttkeyboard.h b/src/video/rtt/SDL_rttkeyboard.h
+new file mode 100644
+index 000000000..1cad947ea
+--- /dev/null
++++ b/src/video/rtt/SDL_rttkeyboard.h
+@@ -0,0 +1,18 @@
++/*
++ * Copyright (c) 2006-2021, RT-Thread Development Team
++ *
++ * SPDX-License-Identifier: GPL-2.0
++ *
++ * Change Logs:
++ * Date           Author       Notes
++ * 2023-02-12     xqyjlj       adapt rt-smart
++ */
++
++#ifndef __SDL_RTTKEYBOARD_H__
++#define __SDL_RTTKEYBOARD_H__
++
++void RTT_InitKeyboard(void);
++void RTT_PollKeyboard(void);
++void RTT_QuitKeyboard(void);
++
++#endif
+diff --git a/src/video/rtt/SDL_rttmouse.c b/src/video/rtt/SDL_rttmouse.c
+new file mode 100644
+index 000000000..d96c46dd6
+--- /dev/null
++++ b/src/video/rtt/SDL_rttmouse.c
+@@ -0,0 +1,34 @@
++/*
++ * Copyright (c) 2006-2021, RT-Thread Development Team
++ *
++ * SPDX-License-Identifier: GPL-2.0
++ *
++ * Change Logs:
++ * Date           Author       Notes
++ * 2023-02-12     xqyjlj       adapt rt-smart
++ */
++
++#include "../../SDL_internal.h"
++
++#include "../../events/SDL_mouse_c.h"
++#include "SDL_mouse.h"
++#include "SDL_rttmouse.h"
++
++#if SDL_VIDEO_DRIVER_RTT
++
++void RTT_InitMouse(void)
++{
++    // TODO
++}
++
++void RTT_PollMouse(void)
++{
++    // TODO
++}
++
++void RTT_QuitMouse(void)
++{
++    // TODO
++}
++
++#endif
+diff --git a/src/video/rtt/SDL_rttmouse.h b/src/video/rtt/SDL_rttmouse.h
+new file mode 100644
+index 000000000..c82509744
+--- /dev/null
++++ b/src/video/rtt/SDL_rttmouse.h
+@@ -0,0 +1,18 @@
++/*
++ * Copyright (c) 2006-2021, RT-Thread Development Team
++ *
++ * SPDX-License-Identifier: GPL-2.0
++ *
++ * Change Logs:
++ * Date           Author       Notes
++ * 2023-02-12     xqyjlj       adapt rt-smart
++ */
++
++#ifndef __SDL_RTTMOUSE_H__
++#define __SDL_RTTMOUSE_H__
++
++void RTT_InitMouse(void);
++void RTT_PollMouse(void);
++void RTT_QuitMouse(void);
++
++#endif
+diff --git a/src/video/rtt/SDL_rttscreen.c b/src/video/rtt/SDL_rttscreen.c
+new file mode 100755
+index 000000000..4e76086d1
+--- /dev/null
++++ b/src/video/rtt/SDL_rttscreen.c
+@@ -0,0 +1,387 @@
++/*
++ * Copyright (c) 2006-2021, RT-Thread Development Team
++ *
++ * SPDX-License-Identifier: GPL-2.0
++ *
++ * Change Logs:
++ * Date           Author       Notes
++ * 2021-1-14      eason        The first version
++ * 2021-9-6       songchao     modify for art-pi-samrt
++ * 2023-02-12     xqyjlj       adapt rt-smart
++ */
++
++#include "../../SDL_internal.h"
++
++#include "SDL_pixels.h"
++#include "SDL_rttcommon.h"
++#include "SDL_rttscreen.h"
++
++#if SDL_VIDEO_DRIVER_RTT
++
++#if SDL_VIDEO_DRIVER_RTT_VIRTIO_GPU
++
++#define VIRTIO_GPU_FORMAT_BPP      32
++#define VIRTIO_GPU_FORMAT_PIXEL    4
++#define VIRTIO_GPU_CURSOR_WIDTH    64
++#define VIRTIO_GPU_CURSOR_HEIGHT   64
++#define VIRTIO_GPU_CURSOR_IMG_SIZE (VIRTIO_GPU_CURSOR_WIDTH * VIRTIO_GPU_CURSOR_HEIGHT * VIRTIO_GPU_FORMAT_PIXEL)
++
++#define VIRTIO_PAGE_SHIFT          12
++#define VIRTIO_PAGE_SIZE           (1 << VIRTIO_PAGE_SHIFT)
++
++enum
++{
++    VIRTIO_DEVICE_CTRL_GPU_SET_PRIMARY = 0x20,
++    VIRTIO_DEVICE_CTRL_GPU_CREATE_2D,
++
++    VIRTIO_DEVICE_CTRL_CURSOR_SETUP,
++    VIRTIO_DEVICE_CTRL_CURSOR_SET_IMG,
++    VIRTIO_DEVICE_CTRL_CURSOR_MOVE,
++
++    VIRTIO_DEVICE_CTRL_FRAMEBUFFER_COPY,
++};
++
++rt_device_t                   gpu_dev        = RT_NULL;
++struct virtio_gpu_device     *virtio_gpu_dev = RT_NULL;
++static rt_uint8_t             cursor[VIRTIO_GPU_CURSOR_IMG_SIZE] ALIGN(VIRTIO_PAGE_SIZE);
++struct rt_device_graphic_info graphic_info;
++struct rt_device_rect_info    rect_info;
++
++int RTT_surface2screen(SDL_Surface *surface, int x, int y)
++{
++    if(gpu_dev)
++    {
++        rt_device_control(gpu_dev, VIRTIO_DEVICE_CTRL_FRAMEBUFFER_COPY, surface->pixels);
++        rt_device_control(gpu_dev, RTGRAPHIC_CTRL_RECT_UPDATE, &rect_info);
++    }
++    return 0;
++}
++
++int RTT_screenInit(struct rtt_screen_config *config)
++{
++    rt_err_t ret = -1;
++    uint32_t i   = 0;
++    if(config == NULL)
++    {
++        return 1;
++    }
++
++    gpu_dev = rt_device_find("virtio-gpu0");
++    if(gpu_dev != RT_NULL && rt_device_open(gpu_dev, 0) == RT_EOK)
++    {
++        rt_memset(&rect_info, 0, sizeof(rect_info));
++        rt_device_control(gpu_dev, VIRTIO_DEVICE_CTRL_GPU_SET_PRIMARY, RT_NULL);
++        rt_device_control(gpu_dev, VIRTIO_DEVICE_CTRL_GPU_CREATE_2D, (void *)RTT_FORMAT);
++        rt_device_control(gpu_dev, RTGRAPHIC_CTRL_GET_INFO, &graphic_info);
++        config->pixel_format = RTT_SDL_FORMAT;
++        config->width        = graphic_info.width;
++        config->height       = graphic_info.height;
++        rect_info.x          = 0;
++        rect_info.y          = 0;
++        rect_info.width      = graphic_info.width;
++        rect_info.height     = graphic_info.height;
++        while(i < sizeof(cursor) / 4)
++        {
++            /* R: 0x4c G: 0xaf B: 0x50 A: 0.8 */
++            ((rt_uint32_t *)cursor)[i] = 0xcc4caf50;
++            ++i;
++        }
++        rt_device_control(gpu_dev, VIRTIO_DEVICE_CTRL_CURSOR_SETUP, cursor);
++        rt_device_control(gpu_dev, VIRTIO_DEVICE_CTRL_CURSOR_MOVE, (rt_uint32_t[]){0, 0});
++        virtio_gpu_dev = (struct virtio_gpu_device *)gpu_dev;
++        ret            = 0;
++    }
++
++    return ret;
++}
++
++int RTT_screenQuit()
++{
++    rt_err_t ret = -1;
++    if(gpu_dev)
++    {
++        ret     = rt_device_close(gpu_dev);
++        gpu_dev = NULL;
++    }
++    return ret;
++}
++
++#elif SDL_VIDEO_DRIVER_RTT_FBDEV
++
++#include <errno.h>
++#include <fcntl.h>
++#include <stddef.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <sys/ioctl.h>
++#include <sys/mman.h>
++#include <unistd.h>
++
++#define __u32               uint32_t
++#define __u16               uint16_t
++
++#define FBIOGET_VSCREENINFO 0x4600
++#define FBIOPUT_VSCREENINFO 0x4601
++#define FBIOGET_FSCREENINFO 0x4602
++
++#define FBIOPAN_DISPLAY     0x4606
++
++#define FBIOBLANK           0x4611 /* arg: 0 or vesa level + 1 */
++
++/* VESA Blanking Levels */
++#define VESA_NO_BLANKING    0
++#define VESA_VSYNC_SUSPEND  1
++#define VESA_HSYNC_SUSPEND  2
++#define VESA_POWERDOWN      3
++
++enum
++{
++    /* screen: unblanked, hsync: on,  vsync: on */
++    FB_BLANK_UNBLANK       = VESA_NO_BLANKING,
++    /* screen: blanked,   hsync: on,  vsync: on */
++    FB_BLANK_NORMAL        = VESA_NO_BLANKING + 1,
++    /* screen: blanked,   hsync: on,  vsync: off */
++    FB_BLANK_VSYNC_SUSPEND = VESA_VSYNC_SUSPEND + 1,
++    /* screen: blanked,   hsync: off, vsync: on */
++    FB_BLANK_HSYNC_SUSPEND = VESA_HSYNC_SUSPEND + 1,
++    /* screen: blanked,   hsync: off, vsync: off */
++    FB_BLANK_POWERDOWN     = VESA_POWERDOWN + 1
++};
++
++struct fb_bitfield
++{
++    __u32 offset;    /* beginning of bitfield	*/
++    __u32 length;    /* length of bitfield		*/
++    __u32 msb_right; /* != 0 : Most significant bit is */
++                     /* right */
++};
++
++struct fb_var_screeninfo
++{
++    __u32 xres; /* visible resolution		*/
++    __u32 yres;
++    __u32 xres_virtual; /* virtual resolution		*/
++    __u32 yres_virtual;
++    __u32 xoffset; /* offset from virtual to visible */
++    __u32 yoffset; /* resolution			*/
++
++    __u32 bits_per_pixel; /* guess what			*/
++    __u32 grayscale;      /* 0 = color, 1 = grayscale,	*/
++    /* >1 = FOURCC			*/
++    struct fb_bitfield red;   /* bitfield in fb mem if true color, */
++    struct fb_bitfield green; /* else only length is significant */
++    struct fb_bitfield blue;
++    struct fb_bitfield transp; /* transparency			*/
++
++    __u32 nonstd; /* != 0 Non standard pixel format */
++
++    __u32 activate; /* see FB_ACTIVATE_*		*/
++
++    __u32 height; /* height of picture in mm    */
++    __u32 width;  /* width of picture in mm     */
++
++    __u32 accel_flags; /* (OBSOLETE) see fb_info.flags */
++
++    /* Timing: All values in pixclocks, except pixclock (of course) */
++    __u32 pixclock;     /* pixel clock in ps (pico seconds) */
++    __u32 left_margin;  /* time from sync to picture	*/
++    __u32 right_margin; /* time from picture to sync	*/
++    __u32 upper_margin; /* time from sync to picture	*/
++    __u32 lower_margin;
++    __u32 hsync_len;   /* length of horizontal sync	*/
++    __u32 vsync_len;   /* length of vertical sync	*/
++    __u32 sync;        /* see FB_SYNC_*		*/
++    __u32 vmode;       /* see FB_VMODE_*		*/
++    __u32 rotate;      /* angle we rotate counter clockwise */
++    __u32 colorspace;  /* colorspace for FOURCC-based modes */
++    __u32 reserved[4]; /* Reserved for future compatibility */
++};
++
++struct fb_fix_screeninfo
++{
++    char          id[16];     /* identification string eg "TT Builtin" */
++    unsigned long smem_start; /* Start of frame buffer mem */
++    /* (physical address) */
++    __u32         smem_len;    /* Length of frame buffer mem */
++    __u32         type;        /* see FB_TYPE_*		*/
++    __u32         type_aux;    /* Interleave for interleaved Planes */
++    __u32         visual;      /* see FB_VISUAL_*		*/
++    __u16         xpanstep;    /* zero if no hardware panning  */
++    __u16         ypanstep;    /* zero if no hardware panning  */
++    __u16         ywrapstep;   /* zero if no hardware ywrap    */
++    __u32         line_length; /* length of a line in bytes    */
++    unsigned long mmio_start;  /* Start of Memory Mapped I/O   */
++    /* (physical address) */
++    __u32 mmio_len; /* Length of Memory Mapped I/O  */
++    __u32 accel;    /* Indicate to driver which	*/
++    /*  specific chip/card we have	*/
++    __u16 capabilities; /* see FB_CAP_*			*/
++    __u16 reserved[2];  /* Reserved for future compatibility */
++};
++
++#define FBDEV_PATH          "/dev/fb0"
++
++static struct fb_var_screeninfo vinfo;
++static struct fb_fix_screeninfo finfo;
++
++static char    *fbp        = 0;
++static long int screensize = 0;
++static int      fbfd       = 0;
++
++uint32_t g_sdl_rtt_pixel_format = 0;
++uint32_t g_sdl_rtt_screen_width;
++uint32_t g_sdl_rtt_screen_heigth;
++
++static int __var_to_pixfmt(struct fb_var_screeninfo *var)
++{
++    /*
++     * Check for 565/1555.
++     */
++    if(var->bits_per_pixel == 16 && var->red.length <= 5 && var->green.length <= 6 && var->blue.length <= 5)
++    {
++        if(var->transp.length == 0)
++        {
++            if(var->red.offset >= var->blue.offset)
++                return SDL_PIXELFORMAT_RGB565;
++            else
++                return SDL_PIXELFORMAT_BGR565;
++        }
++    }
++
++    /*
++     * Check for 888/A888.
++     */
++    if(var->bits_per_pixel <= 32 && var->red.length <= 8 && var->green.length <= 8 && var->blue.length <= 8)
++    {
++        if(var->bits_per_pixel == 24 && var->transp.length == 0)
++        {
++            if(var->red.offset >= var->blue.offset)
++                return SDL_PIXELFORMAT_RGB888;
++            else
++                return SDL_PIXELFORMAT_BGR888;
++        }
++
++        if(var->bits_per_pixel == 32)
++        {
++            if(var->transp.offset == 24)
++            {
++                if(var->red.offset >= var->blue.offset)
++                    return SDL_PIXELFORMAT_ARGB8888;
++                else
++                    return SDL_PIXELFORMAT_ABGR8888;
++            }
++            else if(var->transp.offset == 0)
++            {
++                if(var->red.offset >= var->blue.offset)
++                    return SDL_PIXELFORMAT_RGBA8888;
++                else
++                    return SDL_PIXELFORMAT_BGRA8888;
++            }
++        }
++    }
++
++    return 0;
++}
++
++int RTT_surface2screen(SDL_Surface *surface, int x, int y)
++{
++    int i = 0, pitch = 0;
++    int fbp_offset = 0, pixels_offset = 0;
++
++    pitch = surface->pitch / surface->w;
++
++    printf("%d %d %d %d %d\n", surface->pitch, surface->w, surface->h, x, y);
++    for(i = 0; i < surface->h; i++)
++    {
++        fbp_offset    = (g_sdl_rtt_screen_width * pitch * (i + y)) + pitch * x;
++        pixels_offset = surface->pitch * i;
++
++        if(fbp_offset + surface->pitch > screensize)
++        {
++            printf("framebuffer overflow\n");
++            return 1;
++        }
++        memcpy(fbp + fbp_offset, surface->pixels + pixels_offset, surface->pitch);
++    }
++    if(ioctl(fbfd, FBIOPAN_DISPLAY, &vinfo) == -1)
++    {
++        perror("Error to FBIOPAN_DISPLAY");
++        return 1;
++    }
++    return 0;
++}
++
++int RTT_screenInit(struct rtt_screen_config *config)
++{
++    uint32_t pixel_format = 0;
++
++    if(config == NULL)
++    {
++        return 1;
++    }
++
++    fbfd = open(FBDEV_PATH, O_RDWR);
++    if(fbfd == -1)
++    {
++        perror("Error: cannot open framebuffer device");
++        return 1;
++    }
++
++    // Make sure that the display is on.
++    // if(ioctl(fbfd, FBIOBLANK, FB_BLANK_UNBLANK) != 0)
++    // {
++    //     perror("ioctl(FBIOBLANK)");
++    //     Don't return. Some framebuffer drivers like efifb or simplefb don't implement FBIOBLANK.
++    // }
++
++    if(ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo) == -1)
++    {
++        perror("Error reading fixed information");
++        return 1;
++    }
++
++    // Get variable screen information
++    if(ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo) == -1)
++    {
++        perror("Error reading variable information");
++        return 1;
++    }
++
++    screensize = finfo.smem_len;  // finfo.line_length * vinfo.yres;
++
++    pixel_format = __var_to_pixfmt(&vinfo);
++    if(pixel_format <= 0)
++    {
++        printf("unknown pixel format, use default format: %d\n", RTT_SDL_FORMAT);
++        config->pixel_format  = RTT_SDL_FORMAT;
++        g_sdl_rtt_pixel_format = RTT_SDL_FORMAT;
++    }
++    else
++    {
++        config->pixel_format   = pixel_format;
++        g_sdl_rtt_pixel_format = pixel_format;
++    }
++    config->width        = vinfo.xres;
++    config->height       = vinfo.yres;
++    g_sdl_rtt_screen_width  = config->width;
++    g_sdl_rtt_screen_heigth = config->height;
++
++    fbp = (char *)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);
++    if((intptr_t)fbp == -1)
++    {
++        perror("Error: failed to map framebuffer device to memory");
++        return 1;
++    }
++    return 0;
++}
++
++int RTT_screenQuit()
++{
++    if(fbp) munmap(fbp, screensize);
++    if(fbfd) close(fbfd);
++    return 0;
++}
++
++#endif
++
++#endif
+diff --git a/src/video/rtt/SDL_rttscreen.h b/src/video/rtt/SDL_rttscreen.h
+new file mode 100755
+index 000000000..868d4e2c6
+--- /dev/null
++++ b/src/video/rtt/SDL_rttscreen.h
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (c) 2006-2021, RT-Thread Development Team
++ *
++ * SPDX-License-Identifier: GPL-2.0
++ *
++ * Change Logs:
++ * Date           Author       Notes
++ * 2021-1-14      eason        The first version
++ * 2021-9-6       songchao     modify for art-pi-smart
++ * 2023-02-12     xqyjlj       adapt rt-smart
++ */
++
++#ifndef __SDL_RTTSCREEN_H__
++#define __SDL_RTTSCREEN_H__
++
++#include "SDL_rttcommon.h"
++
++int RTT_surface2screen(SDL_Surface *surface, int x, int y);
++int RTT_screenInit();
++int RTT_screenQuit();
++
++struct rtt_screen_config
++{
++    Uint32 width;
++    Uint32 height;
++    Uint32 pixel_format;
++};
++
++#endif
+diff --git a/src/video/rtt/SDL_rtttouch.c b/src/video/rtt/SDL_rtttouch.c
+new file mode 100644
+index 000000000..60f41ae5f
+--- /dev/null
++++ b/src/video/rtt/SDL_rtttouch.c
+@@ -0,0 +1,96 @@
++/*
++ * Copyright (c) 2006-2021, RT-Thread Development Team
++ *
++ * SPDX-License-Identifier: GPL-2.0
++ *
++ * Change Logs:
++ * Date           Author       Notes
++ * 2023-02-12     xqyjlj       adapt rt-smart
++ */
++
++#include "../../SDL_internal.h"
++
++#include "../../events/SDL_touch_c.h"
++#include "../SDL_sysvideo.h"
++#include "SDL_hints.h"
++#include "SDL_rttcommon.h"
++#include "SDL_touch.h"
++
++#if SDL_VIDEO_DRIVER_RTT && SDL_VIDEO_DRIVER_RTT_TOUCH
++
++#define RT_TOUCH_EVENT_NONE (0) /* Touch none */
++#define RT_TOUCH_EVENT_UP   (1) /* Touch up event */
++#define RT_TOUCH_EVENT_DOWN (2) /* Touch down event */
++#define RT_TOUCH_EVENT_MOVE (3) /* Touch move event */
++
++struct rt_touch_data
++{
++    rt_uint8_t  event;        /* The touch event of the data */
++    rt_uint8_t  track_id;     /* Track id of point */
++    rt_uint8_t  width;        /* Point of width */
++    rt_uint16_t x_coordinate; /* Point of x coordinate */
++    rt_uint16_t y_coordinate; /* Point of y coordinate */
++    rt_tick_t   timestamp;    /* The timestamp when the data was received */
++};
++
++extern Uint32 g_sdl_rtt_screen_width;
++extern Uint32 g_sdl_rtt_screen_heigth;
++
++static rt_device_t          touch = NULL;
++static struct rt_touch_data touch_data;
++
++void RTT_InitTouch(void)
++{
++    touch = rt_device_find("virtio-touch0");
++    if(touch)
++    {
++        rt_device_open(touch, RT_DEVICE_FLAG_STREAM);
++        SDL_AddTouch((SDL_TouchID)0, SDL_TOUCH_DEVICE_DIRECT, "RTTTouch");
++        SDL_SetHintWithPriority(SDL_HINT_TOUCH_MOUSE_EVENTS, "0", SDL_HINT_DEFAULT);
++    }
++}
++
++void RTT_QuitTouch(void)
++{
++    if(touch)
++    {
++        rt_device_close(touch);
++        touch = NULL;
++    }
++}
++
++void RTT_PollTouch(void)
++{
++    if(touch)
++    {
++        SDL_Window *window = SDL_GetFocusWindow();
++
++        if(window == NULL)
++        {
++            return;
++        }
++
++        if(rt_device_read(touch, 0, &touch_data, 1) == 1)
++        {
++            if(touch_data.event == RT_TOUCH_EVENT_DOWN)
++            {
++                SDL_SendTouch(0, (SDL_FingerID)0, window, SDL_TRUE,
++                              (float)touch_data.x_coordinate / g_sdl_rtt_screen_width,
++                              (float)touch_data.y_coordinate / g_sdl_rtt_screen_heigth, 1);
++            }
++            else if(touch_data.event == RT_TOUCH_EVENT_UP)
++            {
++                SDL_SendTouch(0, (SDL_FingerID)0, window, SDL_FALSE,
++                              (float)touch_data.x_coordinate / g_sdl_rtt_screen_width,
++                              (float)touch_data.y_coordinate / g_sdl_rtt_screen_heigth, 1);
++            }
++            else if(touch_data.event == RT_TOUCH_EVENT_MOVE)
++            {
++                SDL_SendTouchMotion(0, (SDL_FingerID)0, window, (float)touch_data.x_coordinate / g_sdl_rtt_screen_width,
++                                    (float)touch_data.y_coordinate / g_sdl_rtt_screen_heigth, 1);
++            }
++        }
++    }
++}
++
++#endif
+diff --git a/src/video/rtt/SDL_rtttouch.h b/src/video/rtt/SDL_rtttouch.h
+new file mode 100644
+index 000000000..3c2b8409b
+--- /dev/null
++++ b/src/video/rtt/SDL_rtttouch.h
+@@ -0,0 +1,18 @@
++/*
++ * Copyright (c) 2006-2021, RT-Thread Development Team
++ *
++ * SPDX-License-Identifier: GPL-2.0
++ *
++ * Change Logs:
++ * Date           Author       Notes
++ * 2023-02-12     xqyjlj       adapt rt-smart
++ */
++
++#ifndef __SDL_RTTTOUCH_H__
++#define __SDL_RTTTOUCH_H__
++
++void RTT_InitTouch(void);
++void RTT_QuitTouch(void);
++void RTT_PollTouch(void);
++
++#endif
+diff --git a/src/video/rtt/SDL_rttvideo.c b/src/video/rtt/SDL_rttvideo.c
+new file mode 100755
+index 000000000..a2c5cc780
+--- /dev/null
++++ b/src/video/rtt/SDL_rttvideo.c
+@@ -0,0 +1,125 @@
++/*
++ * Copyright (c) 2006-2021, RT-Thread Development Team
++ *
++ * SPDX-License-Identifier: GPL-2.0
++ *
++ * Change Logs:
++ * Date           Author       Notes
++ * 2021-1-14      eason        The first version
++ * 2021-9-6       songchao     modify for art-pi-smart
++ * 2023-02-12     xqyjlj       adapt rt-smart
++ */
++
++#include "../../SDL_internal.h"
++
++#include "../../events/SDL_events_c.h"
++#include "../SDL_pixels_c.h"
++#include "../SDL_sysvideo.h"
++#include "SDL_mouse.h"
++#include "SDL_rttframebuffer.h"
++#include "SDL_rttkeyboard.h"
++#include "SDL_rttmouse.h"
++#include "SDL_rttscreen.h"
++#include "SDL_rtttouch.h"
++#include "SDL_rttvideo.h"
++#include "SDL_video.h"
++
++#if SDL_VIDEO_DRIVER_RTT
++
++#define RTT_DRIVER_NAME "rtt"
++
++static int  RTT_VideoInit(_THIS);
++static int  RTT_SetDisplayMode(_THIS, SDL_VideoDisplay *display, SDL_DisplayMode *mode);
++static void RTT_VideoQuit(_THIS);
++
++void RTT_PumpEvents(_THIS)
++{
++#if SDL_VIDEO_DRIVER_RTT_TOUCH
++    RTT_PollTouch();
++#endif
++    // RTT_PollKeyboard(); //TODO
++    // RTT_PollMouse(); //TODO
++}
++
++static void RTT_DeleteDevice(SDL_VideoDevice *device)
++{
++    SDL_free(device);
++}
++
++int RTT_CreateWindow(_THIS, SDL_Window *window)
++{
++    return 0;
++}
++
++void RTT_SetWindowTitle(_THIS, SDL_Window *window)
++{
++    // TODO
++}
++
++static SDL_VideoDevice *RTT_CreateDevice(int devindex)
++{
++    SDL_VideoDevice *device;
++
++    device = (SDL_VideoDevice *)SDL_calloc(1, sizeof(SDL_VideoDevice));
++    if(!device)
++    {
++        SDL_OutOfMemory();
++        return (0);
++    }
++    device->is_dummy = SDL_TRUE;
++
++    /* Set the function pointers */
++    device->VideoInit                = RTT_VideoInit;
++    device->VideoQuit                = RTT_VideoQuit;
++    device->SetDisplayMode           = RTT_SetDisplayMode;
++    device->CreateWindowFramebuffer  = SDL_RTT_CreateWindowFramebuffer;
++    device->UpdateWindowFramebuffer  = SDL_RTT_UpdateWindowFramebuffer;
++    device->DestroyWindowFramebuffer = SDL_RTT_DestroyWindowFramebuffer;
++    device->CreateSDLWindow          = RTT_CreateWindow;
++    device->SetWindowTitle           = RTT_SetWindowTitle;
++    device->PumpEvents               = RTT_PumpEvents;
++    device->free                     = RTT_DeleteDevice;
++    return device;
++}
++
++VideoBootStrap RTT_bootstrap = {RTT_DRIVER_NAME, "rt-smart video driver", RTT_CreateDevice};
++
++int RTT_VideoInit(_THIS)
++{
++    SDL_DisplayMode          mode;
++    struct rtt_screen_config config;
++    if(RTT_screenInit(&config) != 0)
++    {
++        return -1;
++    }
++    mode.format         = config.pixel_format;
++    mode.w              = config.width;
++    mode.h              = config.height;
++    mode.refresh_rate   = 0;
++    mode.driverdata     = NULL;
++    if(SDL_AddBasicVideoDisplay(&mode) < 0)
++    {
++        return -1;
++    }
++    SDL_zero(mode);
++    SDL_AddDisplayMode(&_this->displays[0], &mode);
++#if SDL_VIDEO_DRIVER_RTT_TOUCH
++    RTT_InitTouch();
++#endif
++    return 0;
++}
++
++static int RTT_SetDisplayMode(_THIS, SDL_VideoDisplay *display, SDL_DisplayMode *mode)
++{
++    return 0;
++}
++
++void RTT_VideoQuit(_THIS)
++{
++    RTT_screenQuit();
++#if SDL_VIDEO_DRIVER_RTT_TOUCH
++    RTT_QuitTouch();
++#endif
++}
++
++#endif
+diff --git a/src/video/rtt/SDL_rttvideo.h b/src/video/rtt/SDL_rttvideo.h
+new file mode 100755
+index 000000000..a648c4a2e
+--- /dev/null
++++ b/src/video/rtt/SDL_rttvideo.h
+@@ -0,0 +1,17 @@
++/*
++ * Copyright (c) 2006-2021, RT-Thread Development Team
++ *
++ * SPDX-License-Identifier: GPL-2.0
++ *
++ * Change Logs:
++ * Date           Author       Notes
++ * 2021-1-14      eason        The first version
++ * 2023-02-12     xqyjlj       adapt rt-smart
++ */
++
++#include "../../SDL_internal.h"
++
++#ifndef __SDL_RTTVIDEO_H__
++#define __SDL_RTTVIDEO_H__
++
++#endif
+diff --git a/test/Makefile.in b/test/Makefile.in
+index 8c3bbf2a1..f3c65cb68 100644
+--- a/test/Makefile.in
++++ b/test/Makefile.in
+@@ -68,6 +68,7 @@ TARGETS = \
+ 	testwm2$(EXE) \
+ 	testyuv$(EXE) \
+ 	torturethread$(EXE) \
++	testrtt$(EXE) \
+ 
+ 	
+ @OPENGL_TARGETS@ += testgl2$(EXE) testshader$(EXE)
+@@ -315,6 +316,8 @@ testvulkan$(EXE): $(srcdir)/testvulkan.c
+ testlocale$(EXE): $(srcdir)/testlocale.c
+ 	$(CC) -o $@ $? $(CFLAGS) $(LIBS)
+ 
++testrtt$(EXE): $(srcdir)/testrtt.c
++	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+ 
+ 
+ clean:
+diff --git a/test/testrtt.c b/test/testrtt.c
+new file mode 100755
+index 000000000..259464b58
+--- /dev/null
++++ b/test/testrtt.c
+@@ -0,0 +1,204 @@
++/*
++ * Copyright (c) 2006-2020, RT-Thread Development Team
++ *
++ * SPDX-License-Identifier: GPL-2.0
++ *
++ * Change Logs:
++ * Date           Author       Notes
++ * 2020-1-6     eason      The first version
++ */
++#include <SDL.h>
++#include <stdio.h>
++#include <unistd.h>
++
++#define POINTS_COUNT  4
++#define SCREEN_WIDTH  800
++#define SCREEN_HEIGTH 600
++
++static SDL_Point points[POINTS_COUNT] = {
++    {320, 200},
++    {300, 240},
++    {340, 240},
++    {320, 200}
++};
++
++void usage(char *proc_name)
++{
++    printf("\nUsage: %s option\n", proc_name);
++    printf("\toption:\n"
++           "\t-l		draw line <red>\n"
++           "\t-r		draw a rectangle <green>\n"
++           "\t-t		draw a rectangle with texture <blue in red>\n"
++           "\t-p [path]	draw a bmp picture with texture\n"
++           "\t-d		draw dot <red>\n"
++           "\t-w		draw different color in different window\n"
++           "\t-f		test touch finger\n");
++}
++
++int main(int argc, char *argv[])
++{
++    // The window we'll be rendering to
++    SDL_Window *window = NULL;
++
++    // The surface contained by the window
++    SDL_Surface  *screenSurface = NULL;
++    SDL_Renderer *renderer;
++    SDL_Texture  *texture;
++
++    if((argc != 2) && (argc != 3))
++    {
++        usage(argv[0]);
++        return (1);
++    }
++    // use dummy video driver
++    SDL_setenv("SDL_VIDEODRIVER", "rtt", 1);
++    // Initialize SDL
++    if(SDL_Init(SDL_INIT_VIDEO) < 0)
++    {
++        printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
++        return -1;
++    }
++
++    window =
++        SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 340, 340, SDL_WINDOW_SHOWN);
++    if(window == NULL)
++    {
++        printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
++        return -1;
++    }
++
++    renderer = SDL_CreateRenderer(window, -1, 0);
++    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
++    SDL_RenderClear(renderer);
++
++    if(0 == strcmp("-l", argv[1]))
++    {
++        SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
++        SDL_RenderDrawLine(renderer, 0, 0, 320, 200);
++
++        // SDL_RenderDrawLine(renderer, 320, 0, 320, 480);
++        SDL_RenderDrawLines(renderer, points, POINTS_COUNT);
++    }
++    else if(0 == strcmp("-r", argv[1]))
++    {
++        SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
++        SDL_Rect rect = {10, 30, 320, 240};
++        SDL_RenderDrawRect(renderer, &rect);
++        // SDL_RenderFillRect(renderer, &rect);
++    }
++    else if(0 == strcmp("-t", argv[1]))
++    {
++        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 340, 340);
++        SDL_Rect rect = {10, 30, 200, 200};
++        SDL_SetRenderTarget(renderer, texture);
++        SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
++        SDL_RenderClear(renderer);
++        SDL_RenderDrawRect(renderer, &rect);
++
++        SDL_SetRenderDrawColor(renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);
++        SDL_RenderFillRect(renderer, &rect);
++
++        SDL_SetRenderTarget(renderer, NULL);
++        SDL_RenderCopy(renderer, texture, NULL, NULL);
++    }
++    else if(0 == strcmp("-p", argv[1]))
++    {
++        if(!argv[2])
++        {
++            printf("use -p [path]\n");
++            goto end;
++        }
++        if(access(argv[2], 0))
++        {
++            printf("the file %s is not exits\n", argv[2]);
++            goto end;
++        }
++        screenSurface = SDL_LoadBMP(argv[2]);
++        if(!screenSurface)
++        {
++            printf("SDL_LoadBMP failed\n");
++            goto end;
++        }
++        texture = SDL_CreateTextureFromSurface(renderer, screenSurface);
++        SDL_SetRenderTarget(renderer, texture);
++        SDL_RenderCopy(renderer, texture, NULL, NULL);
++    }
++    else if(0 == strcmp("-f", argv[1]))
++    {
++        while(1)
++        {
++            SDL_Event event;
++            while(SDL_PollEvent(&event))
++            {
++                switch(event.type)
++                {
++                    case SDL_FINGERDOWN:
++                    case SDL_FINGERUP:
++                    case SDL_FINGERMOTION:
++                    {
++                        printf("type: %d (%f %f)(%f %f), (%f %f)\n", event.tfinger.type, event.tfinger.x,
++                               event.tfinger.y, event.tfinger.x * 800, event.tfinger.y * 600, event.tfinger.dx,
++                               event.tfinger.dx);
++                        break;
++                    }
++                }
++            }
++        }
++    }
++    else if(0 == strcmp("-d", argv[1]))
++    {
++        SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
++        for(int i = 0; i < 100; i += 5)
++        {
++            for(int j = 0; j < i; j += 5)
++            {
++                SDL_RenderDrawPoint(renderer, i, j);
++            }
++        }
++    }
++    else if(0 == strcmp("-w", argv[1]))
++    {
++        SDL_Window   *win2      = SDL_CreateWindow("MultiWindow2", 100, 100, 400, 240, SDL_WINDOW_SHOWN);
++        SDL_Renderer *renderer2 = SDL_CreateRenderer(win2, -1, 0);
++        SDL_Window   *win3      = SDL_CreateWindow("MultiWindow3", 500, 100, 400, 240, SDL_WINDOW_SHOWN);
++        SDL_Renderer *renderer3 = SDL_CreateRenderer(win3, -1, 0);
++        SDL_Window   *win4      = SDL_CreateWindow("MultiWindow4", 900, 100, 400, 240, SDL_WINDOW_SHOWN);
++        SDL_Renderer *renderer4 = SDL_CreateRenderer(win4, -1, 0);
++        SDL_SetRenderDrawColor(renderer2, 255, 0, 0, SDL_ALPHA_OPAQUE);
++        SDL_RenderClear(renderer2);
++        SDL_SetRenderDrawColor(renderer3, 0, 255, 0, SDL_ALPHA_OPAQUE);
++        SDL_RenderClear(renderer3);
++        SDL_SetRenderDrawColor(renderer4, 0, 0, 255, SDL_ALPHA_OPAQUE);
++        SDL_RenderClear(renderer4);
++
++        SDL_RenderPresent(renderer2);
++        SDL_DestroyRenderer(renderer2);
++        SDL_DestroyWindow(win2);
++        SDL_RenderPresent(renderer3);
++        SDL_DestroyRenderer(renderer3);
++        SDL_DestroyWindow(win3);
++        SDL_RenderPresent(renderer4);
++        SDL_DestroyRenderer(renderer4);
++        SDL_DestroyWindow(win4);
++    }
++    else
++    {
++        usage(argv[0]);
++    }
++
++    SDL_RenderPresent(renderer);
++    SDL_Delay(2000);
++end:
++    // destory renderer
++    if(renderer)
++    {
++        SDL_DestroyRenderer(renderer);
++    }
++    // Destroy window
++    SDL_DestroyWindow(window);
++
++    // Quit SDL subsystems
++    SDL_Quit();
++
++    return 0;
++}

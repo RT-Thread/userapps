@@ -1,0 +1,205 @@
+diff --git a/uhttpd-cgi.c b/uhttpd-cgi.c
+index 8c17251..7bec929 100644
+--- a/uhttpd-cgi.c
++++ b/uhttpd-cgi.c
+@@ -202,7 +202,7 @@ void uh_cgi_request(
+ 			dup2(wfd[0], 0);
+ 
+ 			/* check for regular, world-executable file _or_ interpreter */
+-			if( ((pi->stat.st_mode & S_IFREG) &&
++			if( ((pi->stat.st_mode & S_IFREG) ||
+ 			     (pi->stat.st_mode & S_IXOTH)) || (ip != NULL)
+ 			) {
+ 				/* build environment */
+@@ -385,8 +385,8 @@ void uh_cgi_request(
+ 				FD_SET(rfd[0], &reader);
+ 				FD_SET(wfd[1], &writer);
+ 
+-				timeout.tv_sec = (header_sent < 1) ? cl->server->conf->script_timeout : 3;
+-				timeout.tv_usec = 0;
++				timeout.tv_sec = 0;
++				timeout.tv_usec = 1000;
+ 
+ 				ensure_out(rv = select_intr(fd_max, &reader,
+ 					(content_length > -1) ? &writer : NULL, NULL, &timeout));
+@@ -584,6 +584,8 @@ void uh_cgi_request(
+ 			close(rfd[0]);
+ 			close(wfd[1]);
+ 
++			uh_http_send(cl, req, "", 0);
++
+ 			if( !kill(child, 0) )
+ 			{
+ 				kill(child, SIGTERM);
+diff --git a/uhttpd-cgi.h b/uhttpd-cgi.h
+index cb84dae..35a00d7 100644
+--- a/uhttpd-cgi.h
++++ b/uhttpd-cgi.h
+@@ -22,7 +22,7 @@
+ #include <unistd.h>
+ #include <sys/stat.h>
+ #include <sys/types.h>
+-#include <linux/limits.h>
++#include <limits.h>
+ 
+ void uh_cgi_request(
+ 	struct client *cl, struct http_request *req,
+diff --git a/uhttpd-file.c b/uhttpd-file.c
+index fda86d7..dc0f393 100644
+--- a/uhttpd-file.c
++++ b/uhttpd-file.c
+@@ -108,6 +108,10 @@ static int uh_file_response_ok_hdrs(struct client *cl, struct http_request *req,
+ 		ensure_ret(uh_http_sendf(cl, NULL, "Last-Modified: %s\r\n", uh_file_unix2date(s->st_mtime)));
+ 	}
+ 
++	if (uh_file_header_lookup(req, "ACCEPT-LANGUAGE")) {
++		ensure_ret(uh_http_sendf(cl, NULL, "CONTENT-LANGUAGE: en\r\n"));
++	}
++
+ 	return uh_http_sendf(cl, NULL, "Date: %s\r\n", uh_file_unix2date(time(NULL)));
+ }
+ 
+@@ -355,11 +359,17 @@ void uh_file_request(struct client *cl, struct http_request *req, struct path_in
+ 			ensure_out(uh_file_response_200(cl, req, &pi->stat));
+ 
+ 			ensure_out(uh_http_sendf(cl, NULL, "Content-Type: %s\r\n", uh_file_mime_lookup(pi->name)));
+-			ensure_out(uh_http_sendf(cl, NULL, "Content-Length: %i\r\n", pi->stat.st_size));
+ 
+ 			/* if request was HTTP 1.1 we'll respond chunked */
+ 			if( (req->version > 1.0) && (req->method != UH_HTTP_MSG_HEAD) )
+ 				ensure_out(uh_http_send(cl, NULL, "Transfer-Encoding: chunked\r\n", -1));
++			/*
++			 * Messages _must_ not include both a Content-Length header field and a non-identity
++			 * transfer coding. If the message does include a non-identity transfer-coding, the
++			 * Content-Length _must_ be ignored.
++			 */
++			else
++				ensure_out(uh_http_sendf(cl, NULL, "Content-Length: %i\r\n", pi->stat.st_size));
+ 
+ 			/* close header */
+ 			ensure_out(uh_http_send(cl, NULL, "\r\n", -1));
+diff --git a/uhttpd-file.h b/uhttpd-file.h
+index 3d46815..ef2c3d0 100644
+--- a/uhttpd-file.h
++++ b/uhttpd-file.h
+@@ -24,7 +24,7 @@
+ #include <dirent.h>
+ #include <sys/stat.h>
+ #include <sys/types.h>
+-#include <linux/limits.h>
++#include <limits.h>
+ 
+ struct mimetype {
+ 	const char *extn;
+diff --git a/uhttpd.c b/uhttpd.c
+index 1fd2134..7364226 100644
+--- a/uhttpd.c
++++ b/uhttpd.c
+@@ -688,7 +688,7 @@ int main (int argc, char **argv)
+ 
+ #ifdef HAVE_TLS
+ 	/* load TLS plugin */
+-	if( ! (lib = dlopen("uhttpd_tls.so", RTLD_LAZY | RTLD_GLOBAL)) )
++	/*if( ! (lib = dlopen("uhttpd_tls.so", RTLD_LAZY | RTLD_GLOBAL)) )
+ 	{
+ 		fprintf(stderr,
+ 			"Notice: Unable to load TLS plugin - disabling SSL support! "
+@@ -697,8 +697,8 @@ int main (int argc, char **argv)
+ 	}
+ 	else
+ 	{
+-		/* resolve functions */
+-		if( !(conf.tls_init   = dlsym(lib, "uh_tls_ctx_init"))      ||
++	*/	/* resolve functions */
++/*		if( !(conf.tls_init   = dlsym(lib, "uh_tls_ctx_init"))      ||
+ 		    !(conf.tls_cert   = dlsym(lib, "uh_tls_ctx_cert"))      ||
+ 		    !(conf.tls_key    = dlsym(lib, "uh_tls_ctx_key"))       ||
+ 		    !(conf.tls_free   = dlsym(lib, "uh_tls_ctx_free"))      ||
+@@ -713,14 +713,14 @@ int main (int argc, char **argv)
+ 			);
+ 			exit(1);
+ 		}
+-
++*/
+ 		/* init SSL context */
+-		if( ! (conf.tls = conf.tls_init()) )
++/*		if( ! (conf.tls = conf.tls_init()) )
+ 		{
+ 			fprintf(stderr, "Error: Failed to initalize SSL context\n");
+ 			exit(1);
+ 		}
+-	}
++*/	//}
+ #endif
+ 
+ 	while( (opt = getopt(argc, argv,
+@@ -808,12 +808,7 @@ int main (int argc, char **argv)
+ 
+ 			/* docroot */
+ 			case 'h':
+-				if( ! realpath(optarg, conf.docroot) )
+-				{
+-					fprintf(stderr, "Error: Invalid directory %s: %s\n",
+-						optarg, strerror(errno));
+-					exit(1);
+-				}
++				strcpy(conf.docroot, optarg);
+ 				break;
+ 
+ 			/* error handler */
+@@ -1022,7 +1017,7 @@ int main (int argc, char **argv)
+ 
+ #ifdef HAVE_LUA
+ 	/* load Lua plugin */
+-	if( ! (lib = dlopen("uhttpd_lua.so", RTLD_LAZY | RTLD_GLOBAL)) )
++	/*if( ! (lib = dlopen("uhttpd_lua.so", RTLD_LAZY | RTLD_GLOBAL)) )
+ 	{
+ 		fprintf(stderr,
+ 			"Notice: Unable to load Lua plugin - disabling Lua support! "
+@@ -1031,8 +1026,8 @@ int main (int argc, char **argv)
+ 	}
+ 	else
+ 	{
+-		/* resolve functions */
+-		if( !(conf.lua_init    = dlsym(lib, "uh_lua_init"))    ||
++	*/	/* resolve functions */
++/*		if( !(conf.lua_init    = dlsym(lib, "uh_lua_init"))    ||
+ 		    !(conf.lua_close   = dlsym(lib, "uh_lua_close"))   ||
+ 		    !(conf.lua_request = dlsym(lib, "uh_lua_request"))
+ 		) {
+@@ -1042,17 +1037,17 @@ int main (int argc, char **argv)
+ 			);
+ 			exit(1);
+ 		}
+-
++*/
+ 		/* init Lua runtime if handler is specified */
+-		if( conf.lua_handler )
+-		{
++//		if( conf.lua_handler )
++//		{
+ 			/* default lua prefix */
+-			if( ! conf.lua_prefix )
++/*			if( ! conf.lua_prefix )
+ 				conf.lua_prefix = "/lua";
+ 
+ 			conf.lua_state = conf.lua_init(conf.lua_handler);
+ 		}
+-	}
++*/	//}
+ #endif
+ 
+ 	/* fork (if not disabled) */
+diff --git a/uhttpd.h b/uhttpd.h
+index ff058d6..b376d75 100644
+--- a/uhttpd.h
++++ b/uhttpd.h
+@@ -30,7 +30,7 @@
+ #include <netinet/in.h>
+ #include <netinet/tcp.h>
+ #include <arpa/inet.h>
+-#include <linux/limits.h>
++#include <limits.h>
+ #include <netdb.h>
+ #include <ctype.h>
+ #include <errno.h>
