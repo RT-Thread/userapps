@@ -12,13 +12,13 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      zhouquan
+-- @author      xqyjlj  
 -- @file        xmake.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-05-27     zhouquan     initial version
+-- 2023-05-27     xqyjlj       initial version
 --
 task("smart-create")
 do

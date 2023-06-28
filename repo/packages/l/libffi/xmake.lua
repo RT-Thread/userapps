@@ -12,14 +12,14 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      zhouquan
+-- @author      xqyjlj  
 -- @file        xmake.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-03-06     zhouquan     adapt debug shared
--- 2023-03-02     zhouquan     initial version
+-- 2023-03-06     xqyjlj       adapt debug shared
+-- 2023-03-02     xqyjlj       initial version
 --
 package("libffi")
 do

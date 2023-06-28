@@ -12,13 +12,13 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      zhouquan
+-- @author      xqyjlj  
 -- @file        xmake.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-06-21     zhouquan     initial version
+-- 2023-06-21     xqyjlj       initial version
 --
 add_rules("mode.debug", "mode.release")
 

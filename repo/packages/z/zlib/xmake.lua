@@ -12,15 +12,15 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      zhouquan
+-- @author      xqyjlj  
 -- @file        xmake.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-03-06     zhouquan     adapt debug shared
--- 2023-03-01     zhouquan     add copy artifacts to "RT_XMAKE_PKG_INSTALLDIR"
--- 2023-02-28     zhouquan     initial version
+-- 2023-03-06     xqyjlj       adapt debug shared
+-- 2023-03-01     xqyjlj       add copy artifacts to "RT_XMAKE_PKG_INSTALLDIR"
+-- 2023-02-28     xqyjlj       initial version
 --
 package("zlib")
 do

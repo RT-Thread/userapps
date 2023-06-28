@@ -12,13 +12,13 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      zhouquan
+-- @author      xqyjlj  
 -- @file        riscv64gc-unknown-smart-musl.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-03-08     zhouquan     initial version
+-- 2023-03-08     xqyjlj       initial version
 --
 set_xmakever("2.7.2")
 

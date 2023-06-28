@@ -12,13 +12,13 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      zhouquan
+-- @author      xqyjlj  
 -- @file        rt.cpp.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-06-12     zhouquan     initial version
+-- 2023-06-12     xqyjlj       initial version
 --
 rule("rt.cpp")
 do

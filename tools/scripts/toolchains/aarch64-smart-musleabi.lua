@@ -12,13 +12,13 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      zhouquan
+-- @author      xqyjlj  
 -- @file        aarch64-smart-musleabi.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-02-28     zhouquan     initial version
+-- 2023-02-28     xqyjlj       initial version
 --
 set_xmakever("2.7.2")
 

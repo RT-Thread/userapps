@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# @author      zhouquan
+# @author      xqyjlj  
 # @file        run.sh
 #
 # Change Logs:
 # Date           Author       Notes
 # ------------   ----------   -----------------------------------------------
-# 2023-01-12     zhouquan     initial version
+# 2023-01-12     xqyjlj       initial version
 #
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
