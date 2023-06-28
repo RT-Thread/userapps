@@ -12,13 +12,13 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      zhouquan
+-- @author      xqyjlj  
 -- @file        aarch64-smart-musleabi.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-02-28     zhouquan     initial version
+-- 2023-02-28     xqyjlj       initial version
 --
 set_xmakever("2.7.2")
 
@@ -38,7 +38,6 @@ do
 
         local link_type = os.getenv("RT_XMAKE_LINK_TYPE") or "shared"
         if link_type == "static" then
-            toolchain:add("ldflags", "--static", {force = true})
             local ldscript = rtflags.get_ldscripts(false)
             toolchain:add("ldflags", ldscript.ldflags, {force = true})
         else

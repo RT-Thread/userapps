@@ -12,13 +12,13 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      zhouquan
+-- @author      xqyjlj  
 -- @file        rt.map.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-03-10     zhouquan     initial version
+-- 2023-03-10     xqyjlj       initial version
 --
 set_xmakever("2.7.2")
 

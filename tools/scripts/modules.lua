@@ -12,12 +12,12 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      zhouquan
+-- @author      xqyjlj  
 -- @file        modules.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-05-08     zhouquan     initial version
+-- 2023-05-08     xqyjlj       initial version
 --
 add_moduledirs(path.join(os.scriptdir(), "modules"))

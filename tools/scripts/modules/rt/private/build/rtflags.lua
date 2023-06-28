@@ -12,13 +12,13 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      zhouquan
+-- @author      xqyjlj
 -- @file        rtflags.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-05-09     zhouquan     initial version
+-- 2023-05-09     xqyjlj       initial version
 --
 import("rt.rt_utils")
 import("core.project.config")
@@ -53,7 +53,7 @@ function get_ldscripts(shared)
 
     if not shared then
         table.insert(ldflags, "-n")
-        table.insert(ldflags, "-static")
+        table.insert(ldflags, "--static")
     end
 
     local linkerscript = path.join(rootdir, arch, "link" .. (shared and ".so" or "") .. ".lds")
@@ -129,6 +129,8 @@ function get_package_info(package)
 
     if rtn.arch == "aarch64" then
         rtn.cpu = "armv8-a"
+    else
+        rtn.cpu = ""
     end
 
     vprint(rtn)

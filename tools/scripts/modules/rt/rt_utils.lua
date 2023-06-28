@@ -12,13 +12,13 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      zhouquan
+-- @author      xqyjlj  
 -- @file        rt_utils.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-05-09     zhouquan     initial version
+-- 2023-05-09     xqyjlj       initial version
 --
 import("core.project.project")
 import("core.project.config")

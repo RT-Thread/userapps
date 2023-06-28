@@ -59,21 +59,15 @@ jobs:
             xmake smart-image -f ext4 -vD -o build/${{ matrix.arch }}-ext4.img
           popd
 
-      - name: ⬆️ upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-smart-apps-${{ github.run_number }}
-          path: |
-            apps/build/cross
-            apps/build/rootfs
-            apps/build/*.img
-
   build-linux-apps:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         app:
+          - busybox
+          - cpp
           - hello
+          - micropython
           - zlib
 
     steps:
@@ -95,10 +89,3 @@ jobs:
             xmake f -a x86_64 --target_os=linux -vyD
             xmake -j$(nproc) -vyD ${{ matrix.app }}
           popd
-
-      - name: ⬆️ upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-smart-apps-${{ github.run_number }}
-          path: |
-            apps/build/cross

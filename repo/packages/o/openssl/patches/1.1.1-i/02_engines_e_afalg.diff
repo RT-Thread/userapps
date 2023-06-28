@@ -1,0 +1,15 @@
+diff --git a/engines/e_afalg.c b/engines/e_afalg.c
+index 4b17228..b4987dc 100644
+--- a/engines/e_afalg.c
++++ b/engines/e_afalg.c
+@@ -22,8 +22,8 @@
+ 
+ #include <sys/socket.h>
+ #include <linux/version.h>
+-#define K_MAJ   4
+-#define K_MIN1  1
++#define K_MAJ   5
++#define K_MIN1  9
+ #define K_MIN2  0
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(K_MAJ, K_MIN1, K_MIN2) || \
+     !defined(AF_ALG)

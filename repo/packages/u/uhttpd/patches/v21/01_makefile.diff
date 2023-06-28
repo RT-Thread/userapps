@@ -1,0 +1,85 @@
+diff --git a/Makefile b/Makefile
+index 6dcc355..284066b 100644
+--- a/Makefile
++++ b/Makefile
+@@ -2,8 +2,7 @@ CGI_SUPPORT ?= 1
+ LUA_SUPPORT ?= 1
+ TLS_SUPPORT ?= 1
+ 
+-CFLAGS ?= -I./lua-5.1.4/src -I./cyassl-1.4.0/include -O0 -ggdb3
+-LDFLAGS ?= -L./lua-5.1.4/src -L./cyassl-1.4.0/src/.libs
++ARFLAGS=rc
+ 
+ CFLAGS += -Wall --std=gnu99
+ 
+@@ -27,32 +26,58 @@ ifeq ($(CGI_SUPPORT),1)
+   CFLAGS += -DHAVE_CGI
+ endif
+ 
++
+ ifeq ($(LUA_SUPPORT),1)
++  OBJL = uhttpd-lua.o
+   CFLAGS += -DHAVE_LUA
+-  LUALIB = uhttpd_lua.so
+ 
+-  $(LUALIB): uhttpd-lua.c
+-		$(CC) $(CFLAGS) $(LDFLAGS) $(FPIC) \
+-			-shared -lm -llua -ldl \
+-			-o $(LUALIB) uhttpd-lua.c
++  LUALIB = libuhttpd_lua.a
++  $(LUALIB): $(OBJL)
++	$(AR) $(ARFLAGS) $@ $(OBJL)
++	-@ ($(RANLIB) $@ || true) >/dev/null 2>&1
++
++  LIB+= -lm -llua -ldl -luhttpd_lua
+ endif
+ 
++#ifeq ($(LUA_SUPPORT),1)
++#  CFLAGS += -DHAVE_LUA
++#  LUALIB = uhttpd_lua.a
++
++#  $(LUALIB): uhttpd-lua.c
++#		$(CC) $(CFLAGS) $(LDFLAGS) $(FPIC) \
++#			-static -lm -llua -ldl \
++#			-o $(LUALIB) uhttpd-lua.c
++#endif
++
++
+ ifeq ($(TLS_SUPPORT),1)
++  OBJT = uhttpd-tls.o
+   CFLAGS += -DHAVE_TLS
+-  TLSLIB = uhttpd_tls.so
+ 
+-  $(TLSLIB): uhttpd-tls.c
+-		$(CC) $(CFLAGS) $(LDFLAGS) $(FPIC) \
+-			-shared -lcyassl \
+-			-o $(TLSLIB) uhttpd-tls.c
++  TLSLIB = libuhttpd_tls.a
++  $(TLSLIB): $(OBJT)
++	$(AR) $(ARFLAGS) $@ $(OBJT)
++	-@ ($(RANLIB) $@ || true) >/dev/null 2>&1
++
++  LIB+= -lssl -luhttpd_tls
+ endif
+ 
++#ifeq ($(TLS_SUPPORT),1)
++#  CFLAGS += -DHAVE_TLS
++#  TLSLIB = uhttpd_tls.a
++
++#  $(TLSLIB): uhttpd-tls.c
++#		$(CC) $(CFLAGS) $(LDFLAGS) $(FPIC) \
++#			-static -lssl \
++#			-o $(TLSLIB) uhttpd-tls.c
++#endif
++
+ %.o: %.c
+ 	$(CC) $(CFLAGS) -c -o $@ $<
+ 
+ compile: $(OBJ) $(TLSLIB) $(LUALIB)
+-	$(CC) -o uhttpd $(LDFLAGS) $(LIB) $(OBJ)
++	$(CXX) -o uhttpd $(LDFLAGS) $(LIB) $(OBJ)
+ 
+ clean:
+-	rm -f *.o *.so uhttpd
++	rm -f *.o *.a uhttpd
+ 

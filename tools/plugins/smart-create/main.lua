@@ -12,18 +12,18 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      zhouquan
+-- @author      xqyjlj  
 -- @file        main.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-05-27     zhouquan     initial version
+-- 2023-05-27     xqyjlj       initial version
 --
 import("core.base.option")
 import("core.project.project")
 
-function create_project(template, targetname)
+function create_project(template, targetname, package)
     if not table.contains(os.dirs(path.join(os.scriptdir(), "templates", "*")),
                           path.join(os.scriptdir(), "templates", template)) then
         raise("unsupport template => %s", template)
@@ -68,6 +68,7 @@ function create_project(template, targetname)
     local builtinvars = {}
     builtinvars.FAQ = io.readfile(path.join(os.scriptdir(), "faq.lua"))
     builtinvars.TARGETNAME = targetname
+    builtinvars.PACKAGE = package
 
     for _, configfile in ipairs(filedirs) do
         local pattern = "%${(.-)}"
@@ -94,7 +95,7 @@ function main()
     local olddir = os.cd(os.workingdir())
     local targetname = option.get("target") or "demo"
     cprint("${bright}create %s ...", targetname) -- trace
-    create_project(option.get("template"), targetname)
+    create_project(option.get("template"), targetname, option.get("package"))
     cprint("${color.success}create ok!") -- trace
     os.cd(olddir)
 end

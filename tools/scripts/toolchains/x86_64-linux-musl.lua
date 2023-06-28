@@ -12,13 +12,13 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      zhouquan
+-- @author      xqyjlj  
 -- @file        x86_64-linux-musleabi.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-05-18     zhouquan     initial version
+-- 2023-05-18     xqyjlj       initial version
 --
 toolchain("x86_64-linux-musl") -- add toolchain
 do
@@ -26,6 +26,10 @@ do
     set_description("x86_64 cross compiler for linux.")
     on_load(function(toolchain)
         toolchain:load_cross_toolchain()
+
+        toolchain:set("toolset", "cxx", "x86_64-linux-musl-g++")
+        toolchain:set("toolset", "ld", "x86_64-linux-musl-gcc")
+
         toolchain:add("ldflags", "--static", {force = true})
     end)
 end

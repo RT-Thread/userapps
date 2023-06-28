@@ -1,0 +1,8 @@
+diff --git a/include/linux/version.h b/include/linux/version.h
+new file mode 100644
+index 0000000..e5d14f7
+--- /dev/null
++++ b/include/linux/version.h
+@@ -0,0 +1,2 @@
++#define LINUX_VERSION_CODE 328777
++#define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))

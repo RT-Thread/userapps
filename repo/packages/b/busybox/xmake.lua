@@ -12,13 +12,13 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      zhouquan
+-- @author      xqyjlj  
 -- @file        xmake.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-05-04     zhouquan     initial version
+-- 2023-05-04     xqyjlj       initial version
 --
 package("busybox")
 do

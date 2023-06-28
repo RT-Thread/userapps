@@ -1,0 +1,13 @@
+diff --git a/crypto/mem_sec.c b/crypto/mem_sec.c
+index b5f959b..8cdf8d3 100644
+--- a/crypto/mem_sec.c
++++ b/crypto/mem_sec.c
+@@ -30,7 +30,7 @@
+ # if defined(OPENSSL_SYS_LINUX)
+ #  include <sys/syscall.h>
+ #  if defined(SYS_mlock2)
+-#   include <linux/mman.h>
++#   include <sys/mman.h>
+ #   include <errno.h>
+ #  endif
+ # endif

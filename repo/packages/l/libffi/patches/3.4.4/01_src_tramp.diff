@@ -1,0 +1,15 @@
+diff --git a/src/tramp.c b/src/tramp.c
+index b9d273a..9bc7994 100644
+--- a/src/tramp.c
++++ b/src/tramp.c
+@@ -48,8 +48,8 @@
+ #include <sys/mman.h>
+ #include <tramp.h>
+ #ifdef __linux__
+-#include <linux/limits.h>
+-#include <linux/types.h>
++#include <limits.h>
++// #include <linux/types.h>
+ #endif
+ #ifdef __CYGWIN__
+ #include <limits.h>
