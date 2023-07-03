@@ -23,11 +23,11 @@
 
 add_rules("mode.debug", "mode.release")
 
-add_requires("libpng", {configs = {shared = false}})
+add_requires("zlib", {configs = {shared = false}})
 
-target("libpng")
+target("zlib")
 do
     add_files("*.c")
-    add_packages("libpng")
+    add_packages("zlib")
 end
 target_end()
