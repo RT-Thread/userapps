@@ -86,6 +86,6 @@ jobs:
           xmake --version
           source env.sh
           pushd apps
-            xmake f -a x86_64 --target_os=linux -vyD
+            xmake f -a aarch64 --target_os=linux -vyD
             xmake -j$(nproc) -vyD ${{ matrix.app }}
           popd
