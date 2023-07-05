@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        deploy.lua
 --
 -- Change Logs:
