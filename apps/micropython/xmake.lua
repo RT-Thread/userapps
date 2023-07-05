@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        xmake.lua
 --
 -- Change Logs:
@@ -22,7 +22,7 @@
 --
 add_rules("mode.debug", "mode.release")
 
-add_requires("micropython", {configs = {shared = false}})
+add_requires("micropython")
 
 target("micropython")
 do

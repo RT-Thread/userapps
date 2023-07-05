@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        xmake.lua
 --
 -- Change Logs:
@@ -32,7 +32,11 @@ do
     add_patches("1.20.0", path.join(os.scriptdir(), "patches", "1.20.0", "01_adapt_smart.diff"),
                 "d0eb05d02339977f9c5771dcc81d2a616962ec57cb4d272fe8da3b8b22cc830c")
 
-    add_configs("shared", {description = "Build shared library.", default = true, type = "boolean"})
+    add_configs("shared", {
+        description = "Build shared library.",
+        default = os.getenv("RT_XMAKE_LINK_TYPE") ~= "static",
+        type = "boolean"
+    })
     add_configs("with_ffi", {description = "use libffi library.", default = false, type = "boolean"})
 
     on_load(function(package)

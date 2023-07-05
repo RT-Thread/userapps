@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        xmake.lua
 --
 -- Change Logs:
@@ -32,10 +32,14 @@ do
     add_versions("8.1", "f8ceb4ee131e3232226a17f51b164afc46cd0b9e6cef344be87c65962cb82b02")
 
     on_load(function(package)
-        -- package:add("deps", "ncurses", {debug = package:config("debug"), configs = {shared = package:config("shared")}})
+        package:add("deps", "ncurses", {debug = package:config("debug"), configs = {shared = package:config("shared")}})
     end)
 
-    add_configs("shared", {description = "Build shared library.", default = true, type = "boolean"})
+    add_configs("shared", {
+        description = "Build shared library.",
+        default = os.getenv("RT_XMAKE_LINK_TYPE") ~= "static",
+        type = "boolean"
+    })
 
     on_install("cross@linux", function(package)
         import("rt.private.build.rtflags")
