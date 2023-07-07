@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        xmake.lua
 --
 -- Change Logs:
@@ -33,7 +33,11 @@ do
     add_versions("v9d", "2303a6acfb6cc533e0e86e8a9d29f7e6079e118b9de3f96e07a71a11c082fa6a")
     add_versions("v9e", "4077d6a6a75aeb01884f708919d25934c93305e49f7e3f36db9129320e6f4f3d")
 
-    add_configs("shared", {description = "Build shared library.", default = true, type = "boolean"})
+    add_configs("shared", {
+        description = "Build shared library.",
+        default = os.getenv("RT_XMAKE_LINK_TYPE") ~= "static",
+        type = "boolean"
+    })
 
     on_install("cross@linux", function(package)
         import("rt.private.build.rtflags")

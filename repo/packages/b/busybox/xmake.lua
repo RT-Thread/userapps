@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        xmake.lua
 --
 -- Change Logs:
@@ -30,7 +30,7 @@ do
     add_versions("1.35.0", "faeeb244c35a348a334f4a59e44626ee870fb07b6884d68c10ae8bc19f83a694")
 
     add_patches("1.35.0", path.join(os.scriptdir(), "patches", "1.35.0", "01_adapt_smart.diff"),
-                "1bbfbe1c98f8693e10978fc4e7b350af444f59e5b5655bcc2ef753059ea77e54")
+                "897875a5c8af75164d2e089e9f3869ad4ee0a329f7ee80b4a9752c88ba18c8cc")
 
     on_install("cross@linux", function(package)
         import("rt.private.build.rtflags")

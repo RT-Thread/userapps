@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        xmake.lua
 --
 -- Change Logs:
@@ -32,7 +32,11 @@ do
     add_patches("2.0.14", path.join(os.scriptdir(), "patches", "2.0.14", "01_adapt_smart.diff"),
                 "b23de0d3b13dd7d3a12a07a94ec84d51c78c9960058730d920e321871418e12b")
 
-    add_configs("shared", {description = "Build shared library.", default = true, type = "boolean"})
+    add_configs("shared", {
+        description = "Build shared library.",
+        default = os.getenv("RT_XMAKE_LINK_TYPE") ~= "static",
+        type = "boolean"
+    })
 
     add_includedirs("include", "include/SDL2")
 

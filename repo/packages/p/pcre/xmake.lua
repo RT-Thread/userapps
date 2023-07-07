@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        xmake.lua
 --
 -- Change Logs:
@@ -28,7 +28,11 @@ do
     add_urls("https://github.com/xmake-mirror/pcre/releases/download/$(version)/pcre-$(version).tar.bz2")
     add_versions("8.45", "4dae6fdcd2bb0bb6c37b5f97c33c2be954da743985369cddac3546e3218bffb8")
 
-    add_configs("shared", {description = "Build shared library.", default = true, type = "boolean"})
+    add_configs("shared", {
+        description = "Build shared library.",
+        default = os.getenv("RT_XMAKE_LINK_TYPE") ~= "static",
+        type = "boolean"
+    })
     add_configs("jit", {description = "Enable jit.", default = false, type = "boolean"})
     add_configs("bitwidth", {description = "Set the code unit width.", default = "8", values = {"8", "16", "32"}})
 

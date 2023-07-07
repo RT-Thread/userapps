@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        xmake.lua
 --
 -- Change Logs:
@@ -36,7 +36,11 @@ do
     add_versions("v1.6.38", "e1ab4aae9b88329d34bd1ca47adf3fb06c10153dbb660f4c80e2673f9fa94b24")
     add_versions("v1.6.39", "eca1ea183643d0b35a764554ede4714cf5dbc30b66845630d81b995c3b2dd571")
 
-    add_configs("shared", {description = "Build shared library.", default = true, type = "boolean"})
+    add_configs("shared", {
+        description = "Build shared library.",
+        default = os.getenv("RT_XMAKE_LINK_TYPE") ~= "static",
+        type = "boolean"
+    })
 
     on_load(function(package)
         package:add("deps", "zlib", {debug = package:config("debug"), configs = {shared = package:config("shared")}})
