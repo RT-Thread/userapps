@@ -1,37 +1,18 @@
 /*
- * File      : smart_fetch.h
- * This file is part of RT-Thread RTOS
- * COPYRIGHT (C) 2006 - 2018, RT-Thread Development Team
+ * Copyright (c) 2023, Real-Thread Technology Co., Ltd
  *
- * This software is dual-licensed: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation. For the terms of this
- * license, see <http://www.gnu.org/licenses/>.
- *
- * You are free to use this software under the terms of the GNU General
- * Public License, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- *
- * Alternatively for commercial application, you can contact us
- * by email <business@rt-thread.com> for commercial license.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: GPL-2.0
  *
  * Change Logs:
  * Date           Author       Notes
  * 2023-06-06     Bernard      the first version
  */
 
-
 #ifndef SMART_FETCH_H__
 #define SMART_FETCH_H__
 
 #define ERROR_SYS_INFO -1
 #define SUCCESS_SYS_INFO 0
-
 
 #define NONE                 "\e[0m"
 #define BLACK                "\e[0;30m"
