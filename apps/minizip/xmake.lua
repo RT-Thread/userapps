@@ -40,10 +40,3 @@ do
 end
 target_end()
 
-target("minizip_test")
-do
-    add_rules("rt.sdk")
-    add_files("minizip_test.c")
-    add_packages("minizip")
-end
-target_end()
