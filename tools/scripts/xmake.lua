@@ -24,6 +24,8 @@ set_xmakever("2.7.2")
 
 local dir = ""
 local rcfiles = os.getenv("XMAKE_RCFILES")
+local user_repo = os.getenv("RT_XMAKE_USERREPO_DIR")
+
 if rcfiles then
     dir = path.directory(rcfiles) .. "/"
 end
@@ -33,9 +35,18 @@ includes(dir .. "rules.lua")
 includes(dir .. "tasks.lua")
 includes(dir .. "toolchains.lua")
 
+if user_repo then
+    add_repositories("user-repo " .. user_repo)
+end
+
 for _, item in ipairs(os.dirs(dir .. "../../repo*")) do
-    bn = path.basename(item)
-    add_repositories(bn .. " " .. item)
+    if os.isfile(item .. "/repo/xmake.lua") then
+        bn = path.basename(item)
+        add_repositories(bn .. " " .. item .. "/repo")
+    elseif os.isdir(item .. "/packages") and os.isfile(item .. "/xmake.lua") then
+        bn = path.basename(item)
+        add_repositories(bn .. " " .. item)
+    end
 end
 
 local archs = {
