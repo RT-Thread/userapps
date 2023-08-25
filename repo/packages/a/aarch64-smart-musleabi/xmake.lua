@@ -29,12 +29,12 @@ do
     if is_host("windows") then
         add_urls("http://117.143.63.254:9012/www/rt-smart/aarch64-linux-musleabi_for_i686-w64-mingw32_$(version).zip")
 
-        add_versions("184869", "9dd15ff69ce44270aaccd05ccd038bad15baf60f2e4f0dafadc570a51b2eabde")
+        add_versions("188177", "01dae6cea76959e7a2684630ca1c295e71ca65a288b4787a6595e93d45edba1e")
     elseif is_host("linux") then
         add_urls(
             "http://117.143.63.254:9012/www/rt-smart/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu_$(version).tar.bz2")
 
-        add_versions("184869", "81c62acbdec8076bbbde564891798c84eeec3db1af40383600aec4fdc3a59fca")
+        add_versions("188177", "e4e2720c0269eb0b00231f865abe2340f1e994490dfbc3d8617eee48098dbc1d")
     end
 
     on_install("@windows", "@linux|x86_64", function(package)
