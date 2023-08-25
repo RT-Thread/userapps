@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        riscv64gc-unknown-smart-musl.lua
 --
 -- Change Logs:
