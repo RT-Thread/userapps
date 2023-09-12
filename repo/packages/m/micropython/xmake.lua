@@ -32,6 +32,9 @@ do
     add_patches("1.20.0", path.join(os.scriptdir(), "patches", "1.20.0", "01_adapt_smart.diff"),
                 "d0eb05d02339977f9c5771dcc81d2a616962ec57cb4d272fe8da3b8b22cc830c")
 
+    add_patches("1.20.0", path.join(os.scriptdir(), "patches", "1.20.0", "02_fix_gcc13.diff"),
+                "3b9ac8febc3582c8c914c9c8f53340a78b417c7d707aafd8c63585b34fa55454")
+
     add_configs("shared", {
         description = "Build shared library.",
         default = os.getenv("RT_XMAKE_LINK_TYPE") ~= "static",
