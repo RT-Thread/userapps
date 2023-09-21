@@ -19,6 +19,7 @@
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
 -- 2023-05-22     xqyjlj       initial version
+-- 2023-09-19     zbtrs        upgrade version to support d1s
 --
 package("sdl2")
 do
@@ -27,10 +28,10 @@ do
 
     add_urls("https://github.com/libsdl-org/SDL/archive/refs/tags/release-$(version).tar.gz")
 
-    add_versions("2.0.14", "f85233bc8d4f30a7caa5aea7de0f95b8f4b1f7272473aea4b3ec4ede0a27357f")
+    add_versions("2.0.16", "bfb53c5395ff2862d07617b23939fca9a752c2f4d2424e617cedd083390b0143")
 
-    add_patches("2.0.14", path.join(os.scriptdir(), "patches", "2.0.14", "01_adapt_smart.diff"),
-                "b23de0d3b13dd7d3a12a07a94ec84d51c78c9960058730d920e321871418e12b")
+    add_patches("2.0.16",path.join(os.scriptdir(), "patches", "2.0.16", "01_adapt_smart.diff"),
+                "a09ea8ac7c61d04fd568accd7f565f627808e33fe1698c3a9ee95e00d6b3c270")
 
     add_configs("shared", {
         description = "Build shared library.",
@@ -57,7 +58,6 @@ do
         end
 
         table.insert(configs, "--build=i686-pc-linux-gnu")
-        table.insert(configs, "--enable-joystick-virtual=no")
         table.insert(configs, "--enable-render-d3d=no")
         table.insert(configs, "--enable-sdl-dlopen=no")
         table.insert(configs, "--enable-joystick=no")
@@ -65,13 +65,14 @@ do
         table.insert(configs, "--enable-hidapi=no")
         table.insert(configs, "--enable-hidapi-libusb=no")
         table.insert(configs, "--enable-threads=no")
+        table.insert(configs, "--enable-joystick-virtual=no")
         table.insert(configs, "--enable-3dnow=no")
         table.insert(configs, "--enable-jack-shared=no")
         table.insert(configs, "--enable-pulseaudio-shared=no")
-        table.insert(configs, "--enable-pulseaudio=no")
         table.insert(configs, "--enable-cpuinfo=no")
         table.insert(configs, "--enable-video-directfb")
         table.insert(configs, "--enable-directfb-shared=no")
+        table.insert(configs, "--enable-pulseaudio=no")
         table.insert(configs, "--enable-video-rtt-virtio-gpu=no")
         table.insert(configs, "--enable-video-rtt-touch=no")
         table.insert(configs, "--enable-video-rtt-fbdev=yes")
@@ -80,6 +81,7 @@ do
         os.vrun("./autogen.sh", {envs = buildenvs})
         import("package.tools.autoconf").configure(package, configs, {envs = buildenvs})
         import("package.tools.make").install(package, {}, {envs = buildenvs})
+        
     end)
 
     on_test(function(package)
