@@ -26,7 +26,7 @@ do
     set_description("Providing secure communication for IoT, smart grid, connected home, automobiles, routers, applications, games, IP, mobile phones, the cloud, and more.")
 
     add_urls("https://github.com/wolfSSL/wolfssl/archive/refs/tags/$(version)-stable.tar.gz")
-    add_versions("v5.6.3","2E74A397FA797C2902D7467D500DE904907666AFB4FF80F6464F6EFD5AFB114A")
+    add_versions("v5.6.3","2e74a397fa797c2902d7467d500de904907666afb4ff80f6464f6efd5afb114a")
 
     add_configs("shared", {
         description = "Build shared library.",

@@ -31,9 +31,9 @@ do
 
     add_patches("2022.83",path.join(os.scriptdir(), "patches", "2022.83", "01_adapt_smart.diff"),
                 "b15127fcee613fe7771d8f8dcc93b0ea3739ac6b3a2b06c99d51456fa8f81606")
-    -- add_patches("2022.83",path.join(os.scriptdir(), "patches", "2022.83", "02_adapt_user.diff"),
-    --             "3f6ce9984e13f01d58839b8ca14bcf10ca62fbd9780ac7ea39b76238ab27fde7")
-
+    add_patches("2022.83",path.join(os.scriptdir(), "patches", "2022.83", "03_fix_memory.diff"),
+                "a12b7ee10502d47994c089e39b5b30640516971323eed9af93cdf96bcdc7815d")
+                
     on_load(function(package)
         package:add("deps", "zlib", {debug = package:config("debug"), configs = {shared = package:config("shared")}})
     end)
