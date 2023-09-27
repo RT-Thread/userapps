@@ -51,11 +51,6 @@ do
         local packagedeps = {}
         os.setenv("PATH", info.toolchainsdir .. ":" .. os.getenv("PATH"))
 
-        if host == "aarch64-linux-musleabi" then
-            arch = "aarch64"
-            cpu = "armv8-a"
-        end
-
         table.insert(configs, "--cross-prefix=" .. host .. "-")
         table.insert(configs, "--enable-cross-compile")
         table.insert(configs, "--target-os=none")
@@ -63,6 +58,10 @@ do
         table.insert(configs, "--cxx=" .. cxx)
         table.insert(configs, "--arch=" .. arch)
         table.insert(configs, "--cpu=" .. cpu)
+
+        if arch == "x86_64" then
+            table.insert(configs,"--disable-x86asm")
+        end
 
         if package:config("shared") then
             table.insert(configs, "--enable-shared")
