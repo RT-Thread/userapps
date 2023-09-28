@@ -1,0 +1,16 @@
+diff --git a/svr-chansession.c b/svr-chansession.c
+index 56e5474..4257f68 100644
+--- a/svr-chansession.c
++++ b/svr-chansession.c
+@@ -1010,8 +1010,9 @@ static void execchild(const void *user_data) {
+ 
+ 	/* set env vars */
+ 	ses.authstate.pw_dir = "";
+-	addnewvar("USER", "root");
+-	addnewvar("LOGNAME", "root");
++	ses.authstate.pw_name = "root";
++	addnewvar("USER", ses.authstate.pw_name);
++	addnewvar("LOGNAME", ses.authstate.pw_name);
+ 	addnewvar("HOME", ses.authstate.pw_dir);
+ 	addnewvar("SHELL", get_user_shell());
+ 	if (getuid() == 0) {

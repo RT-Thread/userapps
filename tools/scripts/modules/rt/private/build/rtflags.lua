@@ -129,6 +129,10 @@ function get_package_info(package)
 
     if rtn.arch == "aarch64" then
         rtn.cpu = "armv8-a"
+    elseif rtn.arch == "arm" then
+        rtn.cpu = "armv7-a"
+    elseif rtn.arch == "x86_64" then
+        rtn.cpu = "generic64"
     else
         rtn.cpu = ""
     end

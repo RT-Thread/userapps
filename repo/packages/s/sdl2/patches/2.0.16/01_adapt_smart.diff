@@ -1,8 +1,8 @@
 diff --git a/configure.ac b/configure.ac
-index b7e519b8f..a0b2ddcdf 100644
+index 2dbfd29..2a4c1ff 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -2281,6 +2281,48 @@ AS_HELP_STRING([--enable-kmsdrm-shared], [dynamically load kmsdrm support [[defa
+@@ -2302,6 +2302,48 @@ CheckKMSDRM()
      fi
  }
  
@@ -51,7 +51,7 @@ index b7e519b8f..a0b2ddcdf 100644
  dnl rcg04172001 Set up the Null video driver.
  CheckDummyVideo()
  {
-@@ -3536,6 +3578,10 @@ case "$host" in
+@@ -3579,6 +3621,10 @@ case "$host" in
          CheckVisibilityHidden
          CheckDeclarationAfterStatement
          CheckDummyVideo
@@ -63,10 +63,10 @@ index b7e519b8f..a0b2ddcdf 100644
          CheckDummyAudio
          CheckDLOPEN
 diff --git a/include/SDL_config.h.in b/include/SDL_config.h.in
-index 3a2a7149d..24e3f2e29 100644
+index ea87723..af4e95f 100644
 --- a/include/SDL_config.h.in
 +++ b/include/SDL_config.h.in
-@@ -344,6 +344,10 @@
+@@ -359,6 +359,10 @@
  #undef SDL_VIDEO_DRIVER_DIRECTFB
  #undef SDL_VIDEO_DRIVER_DIRECTFB_DYNAMIC
  #undef SDL_VIDEO_DRIVER_DUMMY
@@ -78,20 +78,21 @@ index 3a2a7149d..24e3f2e29 100644
  #undef SDL_VIDEO_DRIVER_WAYLAND
  #undef SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH
 diff --git a/src/core/linux/SDL_evdev_capabilities.h b/src/core/linux/SDL_evdev_capabilities.h
-index e9c66c05f..a0021cca4 100644
+index 6822425..7488fde 100644
 --- a/src/core/linux/SDL_evdev_capabilities.h
 +++ b/src/core/linux/SDL_evdev_capabilities.h
-@@ -25,7 +25,7 @@
+@@ -25,8 +25,7 @@
  #ifndef SDL_evdev_capabilities_h_
  #define SDL_evdev_capabilities_h_
  
 -#if HAVE_LIBUDEV_H || defined(SDL_JOYSTICK_LINUX)
+-
 +#if HAVE_LIBUDEV_H || defined(SDL_JOYSTICK_LINUX) || defined(SDL_HAPTIC_LINUX)
- 
  #include <linux/input.h>
  
+ /* A device can be any combination of these classes */
 diff --git a/src/events/SDL_quit.c b/src/events/SDL_quit.c
-index d210fdba0..17d4215ae 100644
+index 628bf1b..892a9ec 100644
 --- a/src/events/SDL_quit.c
 +++ b/src/events/SDL_quit.c
 @@ -35,6 +35,8 @@
@@ -113,10 +114,10 @@ index d210fdba0..17d4215ae 100644
  
  static void
 diff --git a/src/video/SDL_sysvideo.h b/src/video/SDL_sysvideo.h
-index c8c425b6b..38d3979e4 100644
+index 0be19c1..ffff42c 100644
 --- a/src/video/SDL_sysvideo.h
 +++ b/src/video/SDL_sysvideo.h
-@@ -439,6 +439,7 @@ extern VideoBootStrap QNX_bootstrap;
+@@ -447,6 +447,7 @@ extern VideoBootStrap QNX_bootstrap;
  extern VideoBootStrap OFFSCREEN_bootstrap;
  extern VideoBootStrap OS2DIVE_bootstrap;
  extern VideoBootStrap OS2VMAN_bootstrap;
@@ -125,10 +126,10 @@ index c8c425b6b..38d3979e4 100644
  extern SDL_VideoDevice *SDL_GetVideoDevice(void);
  extern int SDL_AddBasicVideoDisplay(const SDL_DisplayMode * desktop_mode);
 diff --git a/src/video/SDL_video.c b/src/video/SDL_video.c
-index a0ca32243..b9990236c 100644
+index 057dce0..1efe4a1 100644
 --- a/src/video/SDL_video.c
 +++ b/src/video/SDL_video.c
-@@ -119,6 +119,9 @@ static VideoBootStrap *bootstrap[] = {
+@@ -121,6 +121,9 @@ static VideoBootStrap *bootstrap[] = {
  #endif
  #if SDL_VIDEO_DRIVER_DUMMY
      &DUMMY_bootstrap,
@@ -138,20 +139,12 @@ index a0ca32243..b9990236c 100644
  #endif
      NULL
  };
-@@ -462,6 +465,7 @@ SDL_GetVideoDriver(int index)
-     return NULL;
- }
- 
-+
- /*
-  * Initialize the video and event subsystems -- determine native pixel format
-  */
 diff --git a/src/video/rtt/SDL_rttcommon.h b/src/video/rtt/SDL_rttcommon.h
 new file mode 100644
-index 000000000..8bc85fe7b
+index 0000000..1c03c59
 --- /dev/null
 +++ b/src/video/rtt/SDL_rttcommon.h
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,44 @@
 +/*
 + * Copyright (c) 2006-2021, RT-Thread Development Team
 + *
@@ -160,6 +153,7 @@ index 000000000..8bc85fe7b
 + * Change Logs:
 + * Date           Author       Notes
 + * 2023-02-12     xqyjlj       adapt rt-smart
++ * 2023-09-21     zbtrs        upgrade version
 + */
 +
 +#ifndef __SDL_RTTCOMMON_H__
@@ -197,10 +191,10 @@ index 000000000..8bc85fe7b
 +#endif
 diff --git a/src/video/rtt/SDL_rttframebuffer.c b/src/video/rtt/SDL_rttframebuffer.c
 new file mode 100755
-index 000000000..b20219c0d
+index 0000000..f15ce34
 --- /dev/null
 +++ b/src/video/rtt/SDL_rttframebuffer.c
-@@ -0,0 +1,76 @@
+@@ -0,0 +1,77 @@
 +/*
 + * Copyright (c) 2006-2021, RT-Thread Development Team
 + *
@@ -209,6 +203,7 @@ index 000000000..b20219c0d
 + * Change Logs:
 + * Date           Author       Notes
 + * 2021-1-14      eason        The first version
++ * 2023-09-21     zbtrs        upgrade version
 + */
 +
 +#include "../../SDL_internal.h"
@@ -279,10 +274,10 @@ index 000000000..b20219c0d
 +#endif
 diff --git a/src/video/rtt/SDL_rttframebuffer.h b/src/video/rtt/SDL_rttframebuffer.h
 new file mode 100755
-index 000000000..d0de80f8d
+index 0000000..1225b72
 --- /dev/null
 +++ b/src/video/rtt/SDL_rttframebuffer.h
-@@ -0,0 +1,18 @@
+@@ -0,0 +1,19 @@
 +/*
 + * Copyright (c) 2006-2021, RT-Thread Development Team
 + *
@@ -291,6 +286,7 @@ index 000000000..d0de80f8d
 + * Change Logs:
 + * Date           Author       Notes
 + * 2021-1-14      eason        The first version
++ * 2023-09-21     zbtrs        upgrade version
 + */
 +
 +#ifndef __SDL_RTTFRAMEBUFFER_H__
@@ -303,10 +299,10 @@ index 000000000..d0de80f8d
 +#endif
 diff --git a/src/video/rtt/SDL_rttkeyboard.c b/src/video/rtt/SDL_rttkeyboard.c
 new file mode 100644
-index 000000000..5f432e366
+index 0000000..0f98ddd
 --- /dev/null
 +++ b/src/video/rtt/SDL_rttkeyboard.c
-@@ -0,0 +1,46 @@
+@@ -0,0 +1,47 @@
 +/*
 + * Copyright (c) 2006-2021, RT-Thread Development Team
 + *
@@ -315,6 +311,7 @@ index 000000000..5f432e366
 + * Change Logs:
 + * Date           Author       Notes
 + * 2023-02-12     xqyjlj       adapt rt-smart
++ * 2023-09-21     zbtrs        upgrade version
 + */
 +
 +#include "../../SDL_internal.h"
@@ -355,10 +352,10 @@ index 000000000..5f432e366
 +#endif
 diff --git a/src/video/rtt/SDL_rttkeyboard.h b/src/video/rtt/SDL_rttkeyboard.h
 new file mode 100644
-index 000000000..1cad947ea
+index 0000000..e9f0d74
 --- /dev/null
 +++ b/src/video/rtt/SDL_rttkeyboard.h
-@@ -0,0 +1,18 @@
+@@ -0,0 +1,19 @@
 +/*
 + * Copyright (c) 2006-2021, RT-Thread Development Team
 + *
@@ -367,6 +364,7 @@ index 000000000..1cad947ea
 + * Change Logs:
 + * Date           Author       Notes
 + * 2023-02-12     xqyjlj       adapt rt-smart
++ * 2023-09-21     zbtrs        upgrade version
 + */
 +
 +#ifndef __SDL_RTTKEYBOARD_H__
@@ -379,10 +377,10 @@ index 000000000..1cad947ea
 +#endif
 diff --git a/src/video/rtt/SDL_rttmouse.c b/src/video/rtt/SDL_rttmouse.c
 new file mode 100644
-index 000000000..d96c46dd6
+index 0000000..d8fc5e2
 --- /dev/null
 +++ b/src/video/rtt/SDL_rttmouse.c
-@@ -0,0 +1,34 @@
+@@ -0,0 +1,35 @@
 +/*
 + * Copyright (c) 2006-2021, RT-Thread Development Team
 + *
@@ -391,6 +389,7 @@ index 000000000..d96c46dd6
 + * Change Logs:
 + * Date           Author       Notes
 + * 2023-02-12     xqyjlj       adapt rt-smart
++ * 2023-09-21     zbtrs        upgrade version
 + */
 +
 +#include "../../SDL_internal.h"
@@ -419,10 +418,10 @@ index 000000000..d96c46dd6
 +#endif
 diff --git a/src/video/rtt/SDL_rttmouse.h b/src/video/rtt/SDL_rttmouse.h
 new file mode 100644
-index 000000000..c82509744
+index 0000000..f81c2d1
 --- /dev/null
 +++ b/src/video/rtt/SDL_rttmouse.h
-@@ -0,0 +1,18 @@
+@@ -0,0 +1,19 @@
 +/*
 + * Copyright (c) 2006-2021, RT-Thread Development Team
 + *
@@ -431,6 +430,7 @@ index 000000000..c82509744
 + * Change Logs:
 + * Date           Author       Notes
 + * 2023-02-12     xqyjlj       adapt rt-smart
++ * 2023-09-21     zbtrs        upgrade version
 + */
 +
 +#ifndef __SDL_RTTMOUSE_H__
@@ -443,10 +443,10 @@ index 000000000..c82509744
 +#endif
 diff --git a/src/video/rtt/SDL_rttscreen.c b/src/video/rtt/SDL_rttscreen.c
 new file mode 100755
-index 000000000..4e76086d1
+index 0000000..dae6a45
 --- /dev/null
 +++ b/src/video/rtt/SDL_rttscreen.c
-@@ -0,0 +1,387 @@
+@@ -0,0 +1,439 @@
 +/*
 + * Copyright (c) 2006-2021, RT-Thread Development Team
 + *
@@ -457,6 +457,7 @@ index 000000000..4e76086d1
 + * 2021-1-14      eason        The first version
 + * 2021-9-6       songchao     modify for art-pi-samrt
 + * 2023-02-12     xqyjlj       adapt rt-smart
++ * 2023-09-21     zbtrs        upgrade version
 + */
 +
 +#include "../../SDL_internal.h"
@@ -572,6 +573,7 @@ index 000000000..4e76086d1
 +#define FBIOGET_VSCREENINFO 0x4600
 +#define FBIOPUT_VSCREENINFO 0x4601
 +#define FBIOGET_FSCREENINFO 0x4602
++#define FBIOGET_PIXELINFO   0x4603
 +
 +#define FBIOPAN_DISPLAY     0x4606
 +
@@ -582,6 +584,23 @@ index 000000000..4e76086d1
 +#define VESA_VSYNC_SUSPEND  1
 +#define VESA_HSYNC_SUSPEND  2
 +#define VESA_POWERDOWN      3
++
++
++/* graphic device pixel format */
++#define RTGRAPHIC_PIXEL_FORMAT_MONO     0
++#define RTGRAPHIC_PIXEL_FORMAT_GRAY4    1
++#define RTGRAPHIC_PIXEL_FORMAT_GRAY16   2
++#define RTGRAPHIC_PIXEL_FORMAT_RGB332   3
++#define RTGRAPHIC_PIXEL_FORMAT_RGB444   4
++#define RTGRAPHIC_PIXEL_FORMAT_RGB565   5
++#define RTGRAPHIC_PIXEL_FORMAT_RGB565P  6
++#define RTGRAPHIC_PIXEL_FORMAT_BGR565   6
++#define RTGRAPHIC_PIXEL_FORMAT_RGB666   7
++#define RTGRAPHIC_PIXEL_FORMAT_RGB888   8
++#define RTGRAPHIC_PIXEL_FORMAT_BGR888   9
++#define RTGRAPHIC_PIXEL_FORMAT_ARGB888  10
++#define RTGRAPHIC_PIXEL_FORMAT_ABGR888  11
++#define RTGRAPHIC_PIXEL_FORMAT_RESERVED 12
 +
 +enum
 +{
@@ -681,6 +700,34 @@ index 000000000..4e76086d1
 +uint32_t g_sdl_rtt_screen_width;
 +uint32_t g_sdl_rtt_screen_heigth;
 +
++static int get_pixfmt()
++{
++    int fmt;
++    if (ioctl(fbfd,FBIOGET_PIXELINFO,&fmt) < 0)
++    {
++        printf("can not get pixel format\n");
++        return 0;
++    }
++    
++    switch(fmt) {
++        case RTGRAPHIC_PIXEL_FORMAT_RGB565: 
++            return SDL_PIXELFORMAT_RGB565;
++        case RTGRAPHIC_PIXEL_FORMAT_BGR565:
++            return SDL_PIXELFORMAT_BGR565;
++        case RTGRAPHIC_PIXEL_FORMAT_RGB888:
++            return SDL_PIXELFORMAT_RGB888;
++        case RTGRAPHIC_PIXEL_FORMAT_BGR888:
++            return SDL_PIXELFORMAT_BGR888;
++        case RTGRAPHIC_PIXEL_FORMAT_ARGB888:
++            return SDL_PIXELFORMAT_ARGB8888;
++        case RTGRAPHIC_PIXEL_FORMAT_ABGR888:
++            return SDL_PIXELFORMAT_ABGR8888;
++        default:
++            return 0;
++    }
++
++}
++
 +static int __var_to_pixfmt(struct fb_var_screeninfo *var)
 +{
 +    /*
@@ -744,6 +791,7 @@ index 000000000..4e76086d1
 +    {
 +        fbp_offset    = (g_sdl_rtt_screen_width * pitch * (i + y)) + pitch * x;
 +        pixels_offset = surface->pitch * i;
++        // printf("%d %d %d\n",i,fbp_offset,pixels_offset);
 +
 +        if(fbp_offset + surface->pitch > screensize)
 +        {
@@ -797,8 +845,11 @@ index 000000000..4e76086d1
 +    }
 +
 +    screensize = finfo.smem_len;  // finfo.line_length * vinfo.yres;
++    printf("screensize: %d\n",screensize);
 +
-+    pixel_format = __var_to_pixfmt(&vinfo);
++    pixel_format = get_pixfmt();
++    printf("pixel_format: %d\n",pixel_format);
++    //pixel_format = __var_to_pixfmt(&vinfo);
 +    if(pixel_format <= 0)
 +    {
 +        printf("unknown pixel format, use default format: %d\n", RTT_SDL_FORMAT);
@@ -814,6 +865,7 @@ index 000000000..4e76086d1
 +    config->height       = vinfo.yres;
 +    g_sdl_rtt_screen_width  = config->width;
 +    g_sdl_rtt_screen_heigth = config->height;
++    printf("config->width,config->height : %d %d\n",config->width,config->height);
 +
 +    fbp = (char *)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);
 +    if((intptr_t)fbp == -1)
@@ -836,10 +888,10 @@ index 000000000..4e76086d1
 +#endif
 diff --git a/src/video/rtt/SDL_rttscreen.h b/src/video/rtt/SDL_rttscreen.h
 new file mode 100755
-index 000000000..868d4e2c6
+index 0000000..8e7e178
 --- /dev/null
 +++ b/src/video/rtt/SDL_rttscreen.h
-@@ -0,0 +1,29 @@
+@@ -0,0 +1,30 @@
 +/*
 + * Copyright (c) 2006-2021, RT-Thread Development Team
 + *
@@ -850,6 +902,7 @@ index 000000000..868d4e2c6
 + * 2021-1-14      eason        The first version
 + * 2021-9-6       songchao     modify for art-pi-smart
 + * 2023-02-12     xqyjlj       adapt rt-smart
++ * 2023-09-21     zbtrs        upgrade version
 + */
 +
 +#ifndef __SDL_RTTSCREEN_H__
@@ -871,10 +924,10 @@ index 000000000..868d4e2c6
 +#endif
 diff --git a/src/video/rtt/SDL_rtttouch.c b/src/video/rtt/SDL_rtttouch.c
 new file mode 100644
-index 000000000..60f41ae5f
+index 0000000..6bb6336
 --- /dev/null
 +++ b/src/video/rtt/SDL_rtttouch.c
-@@ -0,0 +1,96 @@
+@@ -0,0 +1,97 @@
 +/*
 + * Copyright (c) 2006-2021, RT-Thread Development Team
 + *
@@ -883,6 +936,7 @@ index 000000000..60f41ae5f
 + * Change Logs:
 + * Date           Author       Notes
 + * 2023-02-12     xqyjlj       adapt rt-smart
++ * 2023-09-21     zbtrs        upgrade version
 + */
 +
 +#include "../../SDL_internal.h"
@@ -973,10 +1027,10 @@ index 000000000..60f41ae5f
 +#endif
 diff --git a/src/video/rtt/SDL_rtttouch.h b/src/video/rtt/SDL_rtttouch.h
 new file mode 100644
-index 000000000..3c2b8409b
+index 0000000..d21c344
 --- /dev/null
 +++ b/src/video/rtt/SDL_rtttouch.h
-@@ -0,0 +1,18 @@
+@@ -0,0 +1,19 @@
 +/*
 + * Copyright (c) 2006-2021, RT-Thread Development Team
 + *
@@ -985,6 +1039,7 @@ index 000000000..3c2b8409b
 + * Change Logs:
 + * Date           Author       Notes
 + * 2023-02-12     xqyjlj       adapt rt-smart
++ * 2023-09-21     zbtrs        upgrade version
 + */
 +
 +#ifndef __SDL_RTTTOUCH_H__
@@ -997,10 +1052,10 @@ index 000000000..3c2b8409b
 +#endif
 diff --git a/src/video/rtt/SDL_rttvideo.c b/src/video/rtt/SDL_rttvideo.c
 new file mode 100755
-index 000000000..a2c5cc780
+index 0000000..17001f1
 --- /dev/null
 +++ b/src/video/rtt/SDL_rttvideo.c
-@@ -0,0 +1,125 @@
+@@ -0,0 +1,126 @@
 +/*
 + * Copyright (c) 2006-2021, RT-Thread Development Team
 + *
@@ -1011,6 +1066,7 @@ index 000000000..a2c5cc780
 + * 2021-1-14      eason        The first version
 + * 2021-9-6       songchao     modify for art-pi-smart
 + * 2023-02-12     xqyjlj       adapt rt-smart
++ * 2023-09-21     zbtrs        upgrade version
 + */
 +
 +#include "../../SDL_internal.h"
@@ -1128,10 +1184,10 @@ index 000000000..a2c5cc780
 +#endif
 diff --git a/src/video/rtt/SDL_rttvideo.h b/src/video/rtt/SDL_rttvideo.h
 new file mode 100755
-index 000000000..a648c4a2e
+index 0000000..55e2ae3
 --- /dev/null
 +++ b/src/video/rtt/SDL_rttvideo.h
-@@ -0,0 +1,17 @@
+@@ -0,0 +1,18 @@
 +/*
 + * Copyright (c) 2006-2021, RT-Thread Development Team
 + *
@@ -1141,6 +1197,7 @@ index 000000000..a648c4a2e
 + * Date           Author       Notes
 + * 2021-1-14      eason        The first version
 + * 2023-02-12     xqyjlj       adapt rt-smart
++ * 2023-09-21     zbtrs        upgrade version
 + */
 +
 +#include "../../SDL_internal.h"
@@ -1149,234 +1206,3 @@ index 000000000..a648c4a2e
 +#define __SDL_RTTVIDEO_H__
 +
 +#endif
-diff --git a/test/Makefile.in b/test/Makefile.in
-index 8c3bbf2a1..f3c65cb68 100644
---- a/test/Makefile.in
-+++ b/test/Makefile.in
-@@ -68,6 +68,7 @@ TARGETS = \
- 	testwm2$(EXE) \
- 	testyuv$(EXE) \
- 	torturethread$(EXE) \
-+	testrtt$(EXE) \
- 
- 	
- @OPENGL_TARGETS@ += testgl2$(EXE) testshader$(EXE)
-@@ -315,6 +316,8 @@ testvulkan$(EXE): $(srcdir)/testvulkan.c
- testlocale$(EXE): $(srcdir)/testlocale.c
- 	$(CC) -o $@ $? $(CFLAGS) $(LIBS)
- 
-+testrtt$(EXE): $(srcdir)/testrtt.c
-+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
- 
- 
- clean:
-diff --git a/test/testrtt.c b/test/testrtt.c
-new file mode 100755
-index 000000000..259464b58
---- /dev/null
-+++ b/test/testrtt.c
-@@ -0,0 +1,204 @@
-+/*
-+ * Copyright (c) 2006-2020, RT-Thread Development Team
-+ *
-+ * SPDX-License-Identifier: GPL-2.0
-+ *
-+ * Change Logs:
-+ * Date           Author       Notes
-+ * 2020-1-6     eason      The first version
-+ */
-+#include <SDL.h>
-+#include <stdio.h>
-+#include <unistd.h>
-+
-+#define POINTS_COUNT  4
-+#define SCREEN_WIDTH  800
-+#define SCREEN_HEIGTH 600
-+
-+static SDL_Point points[POINTS_COUNT] = {
-+    {320, 200},
-+    {300, 240},
-+    {340, 240},
-+    {320, 200}
-+};
-+
-+void usage(char *proc_name)
-+{
-+    printf("\nUsage: %s option\n", proc_name);
-+    printf("\toption:\n"
-+           "\t-l		draw line <red>\n"
-+           "\t-r		draw a rectangle <green>\n"
-+           "\t-t		draw a rectangle with texture <blue in red>\n"
-+           "\t-p [path]	draw a bmp picture with texture\n"
-+           "\t-d		draw dot <red>\n"
-+           "\t-w		draw different color in different window\n"
-+           "\t-f		test touch finger\n");
-+}
-+
-+int main(int argc, char *argv[])
-+{
-+    // The window we'll be rendering to
-+    SDL_Window *window = NULL;
-+
-+    // The surface contained by the window
-+    SDL_Surface  *screenSurface = NULL;
-+    SDL_Renderer *renderer;
-+    SDL_Texture  *texture;
-+
-+    if((argc != 2) && (argc != 3))
-+    {
-+        usage(argv[0]);
-+        return (1);
-+    }
-+    // use dummy video driver
-+    SDL_setenv("SDL_VIDEODRIVER", "rtt", 1);
-+    // Initialize SDL
-+    if(SDL_Init(SDL_INIT_VIDEO) < 0)
-+    {
-+        printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-+        return -1;
-+    }
-+
-+    window =
-+        SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 340, 340, SDL_WINDOW_SHOWN);
-+    if(window == NULL)
-+    {
-+        printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
-+        return -1;
-+    }
-+
-+    renderer = SDL_CreateRenderer(window, -1, 0);
-+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-+    SDL_RenderClear(renderer);
-+
-+    if(0 == strcmp("-l", argv[1]))
-+    {
-+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-+        SDL_RenderDrawLine(renderer, 0, 0, 320, 200);
-+
-+        // SDL_RenderDrawLine(renderer, 320, 0, 320, 480);
-+        SDL_RenderDrawLines(renderer, points, POINTS_COUNT);
-+    }
-+    else if(0 == strcmp("-r", argv[1]))
-+    {
-+        SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
-+        SDL_Rect rect = {10, 30, 320, 240};
-+        SDL_RenderDrawRect(renderer, &rect);
-+        // SDL_RenderFillRect(renderer, &rect);
-+    }
-+    else if(0 == strcmp("-t", argv[1]))
-+    {
-+        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 340, 340);
-+        SDL_Rect rect = {10, 30, 200, 200};
-+        SDL_SetRenderTarget(renderer, texture);
-+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-+        SDL_RenderClear(renderer);
-+        SDL_RenderDrawRect(renderer, &rect);
-+
-+        SDL_SetRenderDrawColor(renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);
-+        SDL_RenderFillRect(renderer, &rect);
-+
-+        SDL_SetRenderTarget(renderer, NULL);
-+        SDL_RenderCopy(renderer, texture, NULL, NULL);
-+    }
-+    else if(0 == strcmp("-p", argv[1]))
-+    {
-+        if(!argv[2])
-+        {
-+            printf("use -p [path]\n");
-+            goto end;
-+        }
-+        if(access(argv[2], 0))
-+        {
-+            printf("the file %s is not exits\n", argv[2]);
-+            goto end;
-+        }
-+        screenSurface = SDL_LoadBMP(argv[2]);
-+        if(!screenSurface)
-+        {
-+            printf("SDL_LoadBMP failed\n");
-+            goto end;
-+        }
-+        texture = SDL_CreateTextureFromSurface(renderer, screenSurface);
-+        SDL_SetRenderTarget(renderer, texture);
-+        SDL_RenderCopy(renderer, texture, NULL, NULL);
-+    }
-+    else if(0 == strcmp("-f", argv[1]))
-+    {
-+        while(1)
-+        {
-+            SDL_Event event;
-+            while(SDL_PollEvent(&event))
-+            {
-+                switch(event.type)
-+                {
-+                    case SDL_FINGERDOWN:
-+                    case SDL_FINGERUP:
-+                    case SDL_FINGERMOTION:
-+                    {
-+                        printf("type: %d (%f %f)(%f %f), (%f %f)\n", event.tfinger.type, event.tfinger.x,
-+                               event.tfinger.y, event.tfinger.x * 800, event.tfinger.y * 600, event.tfinger.dx,
-+                               event.tfinger.dx);
-+                        break;
-+                    }
-+                }
-+            }
-+        }
-+    }
-+    else if(0 == strcmp("-d", argv[1]))
-+    {
-+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-+        for(int i = 0; i < 100; i += 5)
-+        {
-+            for(int j = 0; j < i; j += 5)
-+            {
-+                SDL_RenderDrawPoint(renderer, i, j);
-+            }
-+        }
-+    }
-+    else if(0 == strcmp("-w", argv[1]))
-+    {
-+        SDL_Window   *win2      = SDL_CreateWindow("MultiWindow2", 100, 100, 400, 240, SDL_WINDOW_SHOWN);
-+        SDL_Renderer *renderer2 = SDL_CreateRenderer(win2, -1, 0);
-+        SDL_Window   *win3      = SDL_CreateWindow("MultiWindow3", 500, 100, 400, 240, SDL_WINDOW_SHOWN);
-+        SDL_Renderer *renderer3 = SDL_CreateRenderer(win3, -1, 0);
-+        SDL_Window   *win4      = SDL_CreateWindow("MultiWindow4", 900, 100, 400, 240, SDL_WINDOW_SHOWN);
-+        SDL_Renderer *renderer4 = SDL_CreateRenderer(win4, -1, 0);
-+        SDL_SetRenderDrawColor(renderer2, 255, 0, 0, SDL_ALPHA_OPAQUE);
-+        SDL_RenderClear(renderer2);
-+        SDL_SetRenderDrawColor(renderer3, 0, 255, 0, SDL_ALPHA_OPAQUE);
-+        SDL_RenderClear(renderer3);
-+        SDL_SetRenderDrawColor(renderer4, 0, 0, 255, SDL_ALPHA_OPAQUE);
-+        SDL_RenderClear(renderer4);
-+
-+        SDL_RenderPresent(renderer2);
-+        SDL_DestroyRenderer(renderer2);
-+        SDL_DestroyWindow(win2);
-+        SDL_RenderPresent(renderer3);
-+        SDL_DestroyRenderer(renderer3);
-+        SDL_DestroyWindow(win3);
-+        SDL_RenderPresent(renderer4);
-+        SDL_DestroyRenderer(renderer4);
-+        SDL_DestroyWindow(win4);
-+    }
-+    else
-+    {
-+        usage(argv[0]);
-+    }
-+
-+    SDL_RenderPresent(renderer);
-+    SDL_Delay(2000);
-+end:
-+    // destory renderer
-+    if(renderer)
-+    {
-+        SDL_DestroyRenderer(renderer);
-+    }
-+    // Destroy window
-+    SDL_DestroyWindow(window);
-+
-+    // Quit SDL subsystems
-+    SDL_Quit();
-+
-+    return 0;
-+}
