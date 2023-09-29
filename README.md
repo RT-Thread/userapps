@@ -92,3 +92,12 @@ xmake 是一个基于 Lua 的轻量级跨平台构建工具，使用 xmake.lua �
    ![image-20230531174321326](./assets/image-20230531174321326.png)
 
    在 qemu 中 输入 `ctrl+a` 抬起后，再输入 `x` 即可退出 qemu
+
+## prebuilt的版本
+
+会在每天凌晨生成aarch64/riscv64 for qemu的prebuilt版本，包括内核和rootfs文件系统：
+
+* [aarch64](http://117.143.63.254:9012/www/rt-smart/prebuilt/qemu-virt64-aarch64_latest.tar.gz)
+* [riscv64](http://117.143.63.254:9012/www/rt-smart/prebuilt/qemu-virt64-riscv_latest.tar.gz)
+
+可以使用qemu来运行起来。
