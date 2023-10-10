@@ -11,8 +11,6 @@
 *.xmind binary
 *.bmp binary
 *.exe binary
-fatdisk-x86 binary
-udb binary
 *.lzma binary
 *.zip binary
 *.Z binary
@@ -21,11 +19,15 @@ udb binary
 *.mo binary
 *.pb binary
 *.tga binary
-xfel binary
-make_ext4fs* binary
 *.deb binary
 *.bin binary
 *.img binary
+
+cromfs-tool-* binary
+xfel binary
+make_ext4fs-* binary
+fatdisk-* binary
+udb binary
 
 # These should also not be modified by git.
 *.svg -text

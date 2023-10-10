@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        on_run.lua
 --
 -- Change Logs:
@@ -50,17 +50,40 @@ function make_fat(size, output, rootfs)
     local fatdisk_exec
     local fatdisk_dir = path.absolute("../../../fatdisk", os.scriptdir())
 
-    if not os.host() == "linux" then
+    if os.host() == "windows" then
+        fatdisk_exec = path.join(fatdisk_dir, "fatdisk.exe")
+    elseif os.host() == "linux" then
+        if os.is_arch("x86_64", "x86", "x64") then
+            fatdisk_exec = path.join(fatdisk_dir, "fatdisk-x86")
+        else
+            os.raise("not support arch '%s'", os.arch())
+        end
+    else
         os.raise("not support host '%s'", os.host())
     end
 
-    if os.arch() == "x86_64" then
-        fatdisk_exec = path.join(fatdisk_dir, "fatdisk-x86")
+    os.vrunv(fatdisk_exec, {"--disk_size=" .. size, "--output=" .. output, "--input=" .. rootfs})
+end
+
+function make_cromfs(output, rootfs)
+    local target
+    local rootfs_dir
+    local cromfs_exec
+    local cromfs_dir = path.absolute("../../../cromfs", os.scriptdir())
+
+    if os.host() == "windows" then
+        cromfs_exec = path.join(cromfs_dir, "cromfs-tool.exe")
+    elseif os.host() == "linux" then
+        if os.is_arch("x86_64", "x86", "x64") then
+            cromfs_exec = path.join(cromfs_dir, "cromfs-tool-x86")
+        else
+            os.raise("not support arch '%s'", os.arch())
+        end
     else
-        os.raise("not support arch '%s'", os.arch())
+        os.raise("not support host '%s'", os.host())
     end
 
-    os.vrunv(fatdisk_exec, {"--disk_size=" .. size, "--output=" .. output, "--input=" .. rootfs})
+    os.vrunv(cromfs_exec, {rootfs, output})
 end
 
 function main()
@@ -93,6 +116,8 @@ function main()
         make_ext4(size, output, rootfs)
     elseif format == "fat" then
         make_fat(size, output, rootfs)
+    elseif format == "cromfs" then
+        make_cromfs(output, rootfs)
     else
         os.raise("unsupport format '%s'", format)
     end

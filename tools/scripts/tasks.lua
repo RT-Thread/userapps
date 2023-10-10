@@ -32,7 +32,8 @@ do
         options = {
             {"f",   "format",           "kv",   "ext4",                                     "image format",
                                                                                             "    - ext4",
-                                                                                            "    - fat"},
+                                                                                            "    - fat",
+                                                                                            "    - cromfs"},
             {"s",   "size",             "kv",   "256M",                                     "image size"},
             {"o",   "output",           "kv",   nil,                                        "output image dir"},
             {"r",   "rootfs",           "kv",   nil,                                        "rootfs dir"},
