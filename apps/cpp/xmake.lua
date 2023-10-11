@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        xmake.lua
 --
 -- Change Logs:
@@ -22,9 +22,10 @@
 --
 add_rules("mode.debug", "mode.release")
 
-target("cpp")
+target("cpp_tc")
 do
     add_rules("rt.cpp")
     add_files("*.cpp")
+    add_values("rt.rootfs.prefixdir", "/tc")
 end
 target_end()

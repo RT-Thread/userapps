@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        on_run.lua
 --
 -- Change Logs:
@@ -33,19 +33,33 @@ function create_dir(dir)
     end
 end
 
+function make_link(srcpath, dstpath)
+    print(dstpath)
+    if not os.exists(dstpath) then
+        os.ln(srcpath, dstpath)
+    end
+end
+
 function create_rootfs(rootfs)
     create_dir(path.join(rootfs, "bin"))
     create_dir(path.join(rootfs, "dev"))
+    create_dir(path.join(rootfs, "dev", "shm"))
     create_dir(path.join(rootfs, "etc"))
-    create_dir(path.join(rootfs, "kernel"))
     create_dir(path.join(rootfs, "lib"))
     create_dir(path.join(rootfs, "proc"))
     create_dir(path.join(rootfs, "mnt"))
     create_dir(path.join(rootfs, "services"))
     create_dir(path.join(rootfs, "tmp"))
     create_dir(path.join(rootfs, "usr"))
-    create_dir(path.join(rootfs, "var", "persistence"))
-    create_dir(path.join(rootfs, "var", "run"))
+    create_dir(path.join(rootfs, "var"))
+    create_dir(path.join(rootfs, "run"))
+    create_dir(path.join(rootfs, "root"))
+
+    if os.host() == "linux" then
+        local olddir = os.cd(rootfs)
+        make_link("../run", path.join(rootfs, "var", "run"))
+        os.cd(olddir)
+    end
 end
 
 function deploy_package(rootfs)
@@ -66,7 +80,7 @@ function deploy_package(rootfs)
         local package_rootfs = path.join(repodir, "packages", packagename:sub(1, 1), packagename, "rootfs")
         if os.isdir(package_rootfs) then
             for _, filedir in ipairs(os.filedirs(package_rootfs .. "/*")) do
-                os.vrunv("cp", {"-rfv", filedir, rootfs})
+                os.vrunv("cp", {"-rfv", filedir, rootfs}) -- TODO: need support windows
             end
         end
     end
@@ -97,7 +111,14 @@ function deploy_target(rootfs)
             local srcpath = target:targetfile()
             local artifact_dir = path.join(config.buildir(), config.plat(), config.arch(), config.mode())
             targetfile = path.relative(targetfile, artifact_dir)
-            local dstpath = path.join(rootfs, "bin", targetfile)
+
+            local prefixdir = target:values("rt.rootfs.prefixdir")
+            local dstpath
+            if prefixdir then
+                dstpath = path.join(rootfs, prefixdir, targetfile)
+            else
+                dstpath = path.join(rootfs, "bin", targetfile)
+            end
             cprint("${dim}> copy %s to %s", srcpath, dstpath)
             os.cp(srcpath, dstpath)
         end
