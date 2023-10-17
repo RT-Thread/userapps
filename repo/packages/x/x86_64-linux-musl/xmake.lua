@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        xmake.lua
 --
 -- Change Logs:
@@ -27,10 +27,12 @@ do
     set_description("x86_64 cross compiler for linux.")
 
     if is_host("windows") then
-        add_urls("https://download.rt-thread.org/rt-smart/native/$(version)/x86_64-linux-musl-cross.win.zip")
+        add_urls(
+            "https://download-redirect.rt-thread.org/download/rt-smart/native/toolchains/x86_64-linux-musl-cross-$(version).win.zip")
         add_versions("20210202", "3a13f8bb3694b26ffbe3fe97d45db6cabadb662161cd5fc9cc80fc0adfb02091")
     elseif is_host("linux") then
-        add_urls("https://download.rt-thread.org/rt-smart/native/$(version)/x86_64-linux-musl-cross.linux.tgz")
+        add_urls(
+            "https://download-redirect.rt-thread.org/download/rt-smart/native/toolchains/x86_64-linux-musl-cross-$(version).linux.tgz")
         add_versions("20210202", "37ef7b69d4c4a20bb2c5e7e01ec7c60c1ac7de2c33b029eaa6c0d8b9e1869c6b")
     end
 

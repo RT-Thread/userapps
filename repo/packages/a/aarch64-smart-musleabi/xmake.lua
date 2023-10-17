@@ -26,15 +26,27 @@ do
     set_homepage("https://musl.cc/")
     set_description("aarch64 embedded compiler for rt-smart.")
 
-    if is_host("windows") then
-        add_urls("http://117.143.63.254:9012/www/rt-smart/aarch64-linux-musleabi_for_i686-w64-mingw32_$(version).zip")
+    local version = os.getenv("RT_XMAKE_TOOLCHAIN_AARCH64_VERSION")
+    local sha256 = os.getenv("RT_XMAKE_TOOLCHAIN_AARCH64_SHA256")
 
-        add_versions("188177", "01dae6cea76959e7a2684630ca1c295e71ca65a288b4787a6595e93d45edba1e")
+    if is_host("windows") then
+        add_urls(
+            "https://download-redirect.rt-thread.org/download/rt-smart/toolchains/aarch64-linux-musleabi_for_i686-w64-mingw32_$(version).zip")
+
+        if (version and sha256) then
+            add_versions(version, sha256)
+        else
+            add_versions("188177", "01dae6cea76959e7a2684630ca1c295e71ca65a288b4787a6595e93d45edba1e")
+        end
     elseif is_host("linux") then
         add_urls(
-            "http://117.143.63.254:9012/www/rt-smart/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu_$(version).tar.bz2")
+            "https://download-redirect.rt-thread.org/download/rt-smart/toolchains/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu_$(version).tar.bz2")
 
-        add_versions("188177", "e4e2720c0269eb0b00231f865abe2340f1e994490dfbc3d8617eee48098dbc1d")
+        if (version and sha256) then
+            add_versions(version, sha256)
+        else
+            add_versions("188177", "e4e2720c0269eb0b00231f865abe2340f1e994490dfbc3d8617eee48098dbc1d")
+        end
     end
 
     on_install("@windows", "@linux|x86_64", function(package)

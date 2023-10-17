@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        xmake.lua
 --
 -- Change Logs:
@@ -26,15 +26,27 @@ do
     set_homepage("https://musl.cc/")
     set_description("arm embedded compiler for rt-smart.")
 
-    if is_host("windows") then
-        add_urls("http://117.143.63.254:9012/www/rt-smart/arm-linux-musleabi_for_i686-w64-mingw32_$(version).zip")
+    local version = os.getenv("RT_XMAKE_TOOLCHAIN_ARM_VERSION")
+    local sha256 = os.getenv("RT_XMAKE_TOOLCHAIN_ARM_SHA256")
 
-        add_versions("174629", "c059a516917a5703456c8414eecb29f1456560ff60707c8a5b352f5ef58bdb72")
+    if is_host("windows") then
+        add_urls(
+            "https://download-redirect.rt-thread.org/download/rt-smart/toolchains/arm-linux-musleabi_for_i686-w64-mingw32_$(version).zip")
+
+        if (version and sha256) then
+            add_versions(version, sha256)
+        else
+            add_versions("174629", "c059a516917a5703456c8414eecb29f1456560ff60707c8a5b352f5ef58bdb72")
+        end
     elseif is_host("linux") then
         add_urls(
-            "http://117.143.63.254:9012/www/rt-smart/arm-linux-musleabi_for_x86_64-pc-linux-gnu_$(version).tar.bz2")
+            "https://download-redirect.rt-thread.org/download/rt-smart/toolchains/arm-linux-musleabi_for_x86_64-pc-linux-gnu_$(version).tar.bz2")
 
-        add_versions("174629", "b187482fa807fbfd822eb79ee5a8c0e4e576ad3de4aa088d73b12e21c8de174a")
+        if (version and sha256) then
+            add_versions(version, sha256)
+        else
+            add_versions("174629", "b187482fa807fbfd822eb79ee5a8c0e4e576ad3de4aa088d73b12e21c8de174a")
+        end
     end
 
     on_install("@windows", "@linux|x86_64", function(package)
