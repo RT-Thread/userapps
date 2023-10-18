@@ -25,9 +25,10 @@ add_rules("mode.debug", "mode.release")
 
 add_requires("zlib")
 
-target("zlib")
+target("zlib_tc")
 do
     add_files("*.c")
     add_packages("zlib")
+    add_values("rt.rootfs.prefixdir", "/tc")
 end
 target_end()
