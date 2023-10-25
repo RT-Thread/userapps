@@ -27,8 +27,6 @@ do
         import("rt.private.build.rtflags")
 
         local flags = rtflags.get_sdk()
-        local cxx, _ = target:tool("cxx")
-        target:set("toolset", "ld", cxx)
 
         if config.get("target_os") ~= "rt-smart" then
             return

@@ -31,9 +31,6 @@ do
         import("rt.private.build.rtflags")
         toolchain:load_cross_toolchain()
 
-        toolchain:set("toolset", "cxx", "aarch64-linux-musleabi-g++")
-        toolchain:set("toolset", "ld", "aarch64-linux-musleabi-gcc")
-
         toolchain:add("cxflags", "-march=armv8-a", {force = true})
 
         local link_type = os.getenv("RT_XMAKE_LINK_TYPE") or "shared"
@@ -44,7 +41,6 @@ do
             local ldscript = rtflags.get_ldscripts(true)
             toolchain:add("ldflags", ldscript.ldflags, {force = true})
         end
-        toolchain:add("ldflags", "-Wl,--no-warn-rwx-segments", {force = true})
     end)
 end
 toolchain_end()
