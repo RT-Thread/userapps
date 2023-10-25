@@ -66,14 +66,12 @@ do
             table.insert(configs, "-DPCRE_BUILD_PCRE" .. bitwidth .. "=ON")
         end
 
-        local instance = package:toolchain(info.toolchains)
-        local ld = instance:get("toolset")["ld"]
-        local cxx = instance:get("toolset")["cxx"]
-        instance:set("toolset", "ld", cxx)
         import("package.tools.cmake").install(package, configs, {buildir = "build", ldflags = ldflags})
-        instance:set("toolset", "ld", ld)
     end)
 
     on_test(function(package)
+        local bitwidth = package:config("bitwidth") or "8"
+        local testfunc = string.format("pcre%s_compile", bitwidth ~= "8" and bitwidth or "")
+        assert(package:has_cfuncs(testfunc, {includes = "pcre.h"}))
     end)
 end

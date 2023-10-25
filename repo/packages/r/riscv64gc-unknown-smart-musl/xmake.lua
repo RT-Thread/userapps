@@ -31,21 +31,21 @@ do
 
     if is_host("windows") then
         add_urls(
-            "https://download-redirect.rt-thread.org/download/rt-smart/toolchains/riscv64-linux-musleabi_for_i686-w64-mingw32_$(version).zip")
+            "https://download-redirect.rt-thread.org/download/rt-smart/toolchains/riscv64gc-linux-musleabi_for_i686-w64-mingw32_$(version).zip")
 
         if (version and sha256) then
             add_versions(version, sha256)
         else
-            add_versions("180881", "7b385fe663559985d70936832dc0f6c017ce3bddbdbfaff673996cc3a20faf6c")
+            add_versions("203957-8a397096c1", "0c4a43bc40ddee60774ce384d13760d235e51fd70658c5da0503caec1dd511e4")
         end
     elseif is_host("linux") then
         add_urls(
-            "https://download-redirect.rt-thread.org/download/rt-smart/toolchains/riscv64-linux-musleabi_for_x86_64-pc-linux-gnu_$(version).tar.bz2")
+            "https://download-redirect.rt-thread.org/download/rt-smart/toolchains/riscv64gc-linux-musleabi_for_x86_64-pc-linux-gnu_$(version).tar.bz2")
 
         if (version and sha256) then
             add_versions(version, sha256)
         else
-            add_versions("180881", "21ad2cbd9b4e73e61efd8211b88c3989acaa033a374ac2f26b4e15a7ec7370b6")
+            add_versions("203957-8a397096c1", "19d9a73b1dff1d941953fcb673443259d89362c2e56d1d260af0cc503d9e9f5b")
         end
     end
 

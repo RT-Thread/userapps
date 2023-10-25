@@ -2,4 +2,5 @@ build/
 .xmake/
 rootfs/
 .vscode/
-private/
+/private
+/prebuilt

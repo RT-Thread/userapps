@@ -41,24 +41,11 @@ function get_ldscripts(shared)
         return {ldflags = {}}
     end
 
-    local rootdir = rt_utils.ldscripts_dir()
-    local arch = get_real_arch()
     local ldflags = {}
 
-    if arch == "arm" then
-        arch = "arm/cortex-a"
-    elseif string.startswith(arch, "riscv64") then
-        arch = "riscv64"
-    end
-
     if not shared then
-        table.insert(ldflags, "-n")
         table.insert(ldflags, "--static")
     end
-
-    local linkerscript = path.join(rootdir, arch, "link" .. (shared and ".so" or "") .. ".lds")
-    table.insert(ldflags, "-T")
-    table.insert(ldflags, linkerscript)
 
     return {ldflags = ldflags}
 end
