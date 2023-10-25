@@ -85,7 +85,7 @@ jobs:
           export XMAKE_ROOT=y # Only need to use "--root" in CI
           xmake --version
           source env.sh
-          pushd apps
+          pushd apps/${{ matrix.app }}
             xmake f -a x86_64 --target_os=linux -vyD
-            xmake -j$(nproc) -vyD ${{ matrix.app }}
+            xmake -j$(nproc) -vyD -P .
           popd
