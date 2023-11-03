@@ -40,11 +40,11 @@ xmake 是一个基于 Lua 的轻量级跨平台构建工具，使用 xmake.lua �
 
 3. **安装 qemu**
 
-   userapps 已提供 qemu 7.1.0 的安装包，请自行下载 https://download_redirect.rt-thread.org/download/rt-smart/native/tools/qemu/qemu_7.1.0-2022111713_amd64.deb
+   userapps 已提供 qemu 7.1.0 的安装包，请自行下载 https://download-redirect.rt-thread.org/download/rt-smart/native/tools/qemu/qemu_7.1.0-2022111713_amd64.deb
 
    ```shell
    sudo apt-get install -y libglib2.0-dev libpixman-1-dev
-   curl -L https://download_redirect.rt-thread.org/download/rt-smart/native/tools/qemu/qemu_7.1.0-2022111713_amd64.deb -o ./qemu.deb
+   curl -L https://download-redirect.rt-thread.org/download/rt-smart/native/tools/qemu/qemu_7.1.0-2022111713_amd64.deb -o ./qemu.deb
    sudo dpkg -i ./qemu.deb
    ```
 
@@ -98,7 +98,7 @@ xmake 是一个基于 Lua 的轻量级跨平台构建工具，使用 xmake.lua �
 
 会在每天凌晨生成 aarch64/riscv64 for qemu 的 prebuilt 版本，包括内核和 rootfs 文件系统：
 
-- [aarch64](http://117.143.63.254:9012/www/rt-smart/prebuilt/qemu-virt64-aarch64_latest.tar.gz)
-- [riscv64](http://117.143.63.254:9012/www/rt-smart/prebuilt/qemu-virt64-riscv_latest.tar.gz)
+- [aarch64](https://download-redirect.rt-thread.org/download/rt-smart/prebuilt/qemu-virt64-aarch64_latest.tar.gz)
+- [riscv64](https://download-redirect.rt-thread.org/download/rt-smart/prebuilt/qemu-virt64-riscv_latest.tar.gz)
 
 可以使用 qemu 来运行起来。

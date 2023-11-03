@@ -30,6 +30,8 @@ do
         import("rt.private.build.rtflags")
         toolchain:load_cross_toolchain()
 
+        toolchain:set("toolset", "cxx", "arm-linux-musleabi-g++")
+
         toolchain:add("cxflags", "-march=armv7-a", "-marm", "-msoft-float", {force = true})
 
         local link_type = os.getenv("RT_XMAKE_LINK_TYPE") or "shared"

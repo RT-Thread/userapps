@@ -30,6 +30,8 @@ do
         import("rt.private.build.rtflags")
         toolchain:load_cross_toolchain()
 
+        toolchain:set("toolset", "cxx", "riscv64-unknown-linux-musl-g++")
+
         toolchain:add("cxflags", "-mcmodel=medany", "-march=rv64imafdc", "-mabi=lp64", {force = true})
 
         local link_type = os.getenv("RT_XMAKE_LINK_TYPE") or "shared"
