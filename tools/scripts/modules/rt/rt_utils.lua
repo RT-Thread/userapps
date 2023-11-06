@@ -73,10 +73,7 @@ function cp_with_symlink(srcpath, dstpath, opt)
     else
         option = opt or {symlink = true}
     end
-
-    if os.exists(dstpath) then
-        os.vrm(dstpath)
-    end
+    os.tryrm(dstpath)
     os.vcp(srcpath, dstpath, option)
 end
 
