@@ -163,6 +163,11 @@ function deploy_syslib(toolchains, rootfs)
             rt_utils.cp_with_symlink(filepath, path.join(rootfs, "lib", filename))
         end
     end
+
+    for _, filepath in ipairs(os.files(path.join(pkg:installdir(), toolchains) .. "/*/ld-musl-*.so.*")) do
+        local filename = path.filename(filepath)
+        rt_utils.cp_with_symlink(filepath, path.join(rootfs, "lib", filename))
+    end
 end
 
 function copy_packages()

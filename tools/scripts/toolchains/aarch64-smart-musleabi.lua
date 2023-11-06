@@ -31,6 +31,8 @@ do
         import("rt.private.build.rtflags")
         toolchain:load_cross_toolchain()
 
+        toolchain:set("toolset", "cxx", "aarch64-linux-musleabi-g++")
+
         toolchain:add("cxflags", "-march=armv8-a", {force = true})
 
         local link_type = os.getenv("RT_XMAKE_LINK_TYPE") or "shared"

@@ -27,6 +27,8 @@ do
     on_load(function(toolchain)
         toolchain:load_cross_toolchain()
 
+        toolchain:set("toolset", "cxx", "x86_64-linux-musl-g++")
+
         local link_type = os.getenv("RT_XMAKE_LINK_TYPE") or "shared"
         if link_type == "static" then
             toolchain:add("ldflags", "--static", {force = true})
