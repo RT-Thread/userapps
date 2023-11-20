@@ -54,9 +54,13 @@ function deploy_package(rootfs)
         local requireinfo = instance:requireinfo()
         local repo = instance:repo()
         local packagename = requireinfo.originstr
+        local packageversion = requireinfo.version
         local installdir = instance:installdir()
         local repodir = repo:url()
         local reponame = repo:name()
+        if(packageversion ~= "latest") then
+            packagename = string.gsub(packagename,"%s"..packageversion,"")
+        end
         local deploy_script =
             path.join(repodir, "packages", packagename:sub(1, 1), packagename, "scripts", "deploy.lua")
         if os.isfile(deploy_script) then
