@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        tasks.lua
 --
 -- Change Logs:
@@ -27,7 +27,7 @@ do
     on_run("tasks/smart-image/on_run")
     set_category("plugin")
     set_menu {
-        usage = "xmake rsmartt-image [options]",
+        usage = "xmake smart-image [options]",
         description = "make image",
         options = {
             {"f",   "format",           "kv",   "ext4",                                     "image format",

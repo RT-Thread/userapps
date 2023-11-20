@@ -12,29 +12,31 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      xqyjlj
--- @file        deploy.lua
+-- @author      zbtrs  
+-- @file        export.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-05-09     xqyjlj       initial version
+-- 2023-09-01     zbtrs        initial version
 --
 import("rt.rt_utils")
 
 function main(rootfs, installdir)
-    for _, filepath in ipairs(os.files(path.join(installdir, "bin") .. "/*")) do
-        local filename = path.filename(filepath)
-        rt_utils.cp_with_symlink(filepath, path.join(rootfs, "bin", filename))
+    for _, filedir in ipairs(os.filedirs(path.join(installdir, "include") .. "/*")) do
+        local inc = path.join(installdir, "include")
+        local name = path.relative(filedir, inc)
+        rt_utils.cp_with_symlink(path.join(inc, name), path.join(rootfs, "include", name),
+                                 {rootdir = inc, symlink = true})
     end
 
-    for _, filepath in ipairs(os.files(path.join(installdir, "usr", "bin") .. "/*")) do
+    for _, filepath in ipairs(os.files(path.join(installdir, "lib") .. "/lib*.a")) do
         local filename = path.filename(filepath)
-        rt_utils.cp_with_symlink(filepath, path.join(rootfs, "usr", "bin", filename))
+        rt_utils.cp_with_symlink(filepath, path.join(rootfs, "lib", filename))
     end
 
-    for _, filepath in ipairs(os.files(path.join(installdir, "usr", "sbin") .. "/*")) do
+    for _, filepath in ipairs(os.files(path.join(installdir, "lib") .. "/lib*.so*")) do
         local filename = path.filename(filepath)
-        rt_utils.cp_with_symlink(filepath, path.join(rootfs, "usr", "sbin", filename))
+        rt_utils.cp_with_symlink(filepath, path.join(rootfs, "lib", filename))
     end
 end

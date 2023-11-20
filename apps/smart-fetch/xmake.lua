@@ -12,22 +12,20 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      xqyjlj
+-- @author      zhouquan
 -- @file        xmake.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-03-10     xqyjlj       initial version
+-- 2023-03-10     zhouquan     initial version
 --
-
 add_rules("mode.debug", "mode.release")
 
-add_requires("zlib")
-
-target("zlib")
+target("smart-fetch")
 do
+    add_includedirs("./")
     add_files("*.c")
-    add_packages("zlib")
 end
 target_end()
+

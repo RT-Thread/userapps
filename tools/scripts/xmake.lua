@@ -24,8 +24,8 @@ set_xmakever("2.7.2")
 
 local dir = ""
 local rcfiles = os.getenv("XMAKE_RCFILES")
-local private_repo = os.getenv("RT_XMAKE_PRIVATEREPO_DIR")
 local user_repo = os.getenv("RT_XMAKE_USERREPO_DIR")
+
 if rcfiles then
     dir = path.directory(rcfiles) .. "/"
 end
@@ -36,12 +36,18 @@ includes(dir .. "tasks.lua")
 includes(dir .. "toolchains.lua")
 
 if user_repo then
-    add_repositories("rt-smart-user-repo " .. user_repo)
+    add_repositories("user-repo " .. user_repo)
 end
-if private_repo then
-    add_repositories("rt-smart-private-repo " .. private_repo)
+
+for _, item in ipairs(os.dirs(dir .. "../../repo*")) do
+    if os.isfile(item .. "/repo/xmake.lua") then
+        bn = path.basename(item)
+        add_repositories(bn .. " " .. item .. "/repo")
+    elseif os.isdir(item .. "/packages") and os.isfile(item .. "/xmake.lua") then
+        bn = path.basename(item)
+        add_repositories(bn .. " " .. item)
+    end
 end
-add_repositories("rt-smart-repo " .. dir .. "../../repo")
 
 local archs = {
     aarch64 = "aarch64-smart-musleabi",

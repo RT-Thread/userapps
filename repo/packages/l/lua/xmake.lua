@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        xmake.lua
 --
 -- Change Logs:
@@ -32,7 +32,11 @@ do
     add_patches("5.1.4", path.join(os.scriptdir(), "patches", "5.1.4", "01_makefile.diff"),
                 "ce22ca035ebc054876005aa252c2284266c1f34706b12f7219165dbcd5797e4b")
 
-    add_configs("shared", {description = "Build shared library.", default = true, type = "boolean"})
+    add_configs("shared", {
+        description = "Build shared library.",
+        default = os.getenv("RT_XMAKE_LINK_TYPE") ~= "static",
+        type = "boolean"
+    })
 
     on_load(function(package)
         package:add("deps", "readline", {debug = package:config("debug"), configs = {shared = package:config("shared")}})

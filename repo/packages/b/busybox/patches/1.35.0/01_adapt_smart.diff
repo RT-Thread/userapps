@@ -842,6 +842,19 @@ index 827643808..d98d58ec9 100644
  }
  static int
  dup2_or_raise(int from, int to)
+diff --git a/util-linux/fdisk_gpt.c b/util-linux/fdisk_gpt.c
+index 4c30f31f8..a152d3a73 100644
+--- a/util-linux/fdisk_gpt.c
++++ b/util-linux/fdisk_gpt.c
+@@ -108,7 +108,7 @@ gpt_list_table(int xtra UNUSED_PARAM)
+ 	int i;
+ 	char numstr6[6];
+ 
+-	smart_ulltoa5(total_number_of_sectors * sector_size, numstr6, " KMGTPEZY")[0] = '\0';
++	smart_ulltoa5((unsigned long long)total_number_of_sectors * (unsigned long long)sector_size, numstr6, " KMGTPEZY")[0] = '\0';
+ 	printf("Disk %s: %llu sectors, %s\n", disk_device,
+ 		(unsigned long long)total_number_of_sectors,
+ 		numstr6);
 diff --git a/util-linux/fsfreeze.c b/util-linux/fsfreeze.c
 index 6e2ff0a54..6ba039890 100644
 --- a/util-linux/fsfreeze.c
@@ -869,7 +882,7 @@ index 6d673002f..1f0ba5066 100644
  #ifndef FITRIM
  struct fstrim_range {
 diff --git a/util-linux/mount.c b/util-linux/mount.c
-index 4e65b6b46..08eff7a84 100644
+index 4e65b6b46..258ec69b2 100644
 --- a/util-linux/mount.c
 +++ b/util-linux/mount.c
 @@ -255,9 +255,9 @@
@@ -885,7 +898,21 @@ index 4e65b6b46..08eff7a84 100644
  #endif
  
  
-@@ -818,6 +818,7 @@ static int mount_it_now(struct mntent *mp, unsigned long vfsflags, char *filtero
+@@ -806,7 +806,13 @@ static int mount_it_now(struct mntent *mp, unsigned long vfsflags, char *filtero
+ 			update_mtab_entry_on_move(mp);
+ 		else
+ #endif
++		{
++			if (mp->mnt_opts[0] == '\0')
++			{
++				append_mount_options(&(mp->mnt_opts), "rw");
++			}
+ 			addmntent(mountTable, mp);
++		}
+ 		endmntent(mountTable);
+ 
+ 		if (ENABLE_FEATURE_CLEAN_UP) {
+@@ -818,6 +824,7 @@ static int mount_it_now(struct mntent *mp, unsigned long vfsflags, char *filtero
  	return rc;
  }
  
@@ -893,7 +920,7 @@ index 4e65b6b46..08eff7a84 100644
  #if ENABLE_FEATURE_MOUNT_NFS
  
  /*
-@@ -1912,6 +1913,8 @@ static int nfsmount(struct mntent *mp, unsigned long vfsflags, char *filteropts)
+@@ -1912,6 +1919,8 @@ static int nfsmount(struct mntent *mp, unsigned long vfsflags, char *filteropts)
  
  #endif // !ENABLE_FEATURE_MOUNT_NFS
  
@@ -902,7 +929,7 @@ index 4e65b6b46..08eff7a84 100644
  // Find "...,NAME=NUM,..." in the option string, remove "NAME=NUM" option
  // and return NUM.
  // Return 0 if not found.
-@@ -2089,6 +2092,7 @@ static int singlemount(struct mntent *mp, int ignore_busy)
+@@ -2089,6 +2098,7 @@ static int singlemount(struct mntent *mp, int ignore_busy)
  	}
  
  	// Might this be an NFS filesystem?
@@ -910,7 +937,7 @@ index 4e65b6b46..08eff7a84 100644
  	if (!(vfsflags & (MS_BIND | MS_MOVE))
  	 && (!mp->mnt_type || is_prefixed_with(mp->mnt_type, "nfs"))
  	) {
-@@ -2102,6 +2106,7 @@ static int singlemount(struct mntent *mp, int ignore_busy)
+@@ -2102,6 +2112,7 @@ static int singlemount(struct mntent *mp, int ignore_busy)
  			goto report_error;
  		}
  	}
@@ -918,11 +945,24 @@ index 4e65b6b46..08eff7a84 100644
  
  	// Look at the file.  (Not found isn't a failure for remount, or for
  	// a synthetic filesystem like proc or sysfs.)
-@@ -2151,6 +2156,7 @@ static int singlemount(struct mntent *mp, int ignore_busy)
+@@ -2151,6 +2162,7 @@ static int singlemount(struct mntent *mp, int ignore_busy)
  	// If we know the fstype (or don't need to), jump straight
  	// to the actual mount.
  	if (mp->mnt_type || (vfsflags & (MS_REMOUNT | MS_BIND | MS_MOVE))) {
-+		
++
  		char *next;
  		for (;;) {
  			next = mp->mnt_type ? strchr(mp->mnt_type, ',') : NULL;
+diff --git a/util-linux/umount.c b/util-linux/umount.c
+index 23da32868..18d5dea67 100644
+--- a/util-linux/umount.c
++++ b/util-linux/umount.c
+@@ -169,6 +169,8 @@ int umount_main(int argc UNUSED_PARAM, char **argv)
+ 			argv++;
+ 			path = xmalloc_realpath(zapit);
+ 			if (path) {
++				size_t length = strlen(path);
++				path[length - 1] = '\0';
+ 				for (m = mtl; m; m = m->next)
+ 					if (strcmp(path, m->dir) == 0 || strcmp(path, m->device) == 0)
+ 						break;

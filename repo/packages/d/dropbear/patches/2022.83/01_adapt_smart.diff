@@ -1,0 +1,302 @@
+diff --git a/common-session.c b/common-session.c
+index 5fb33a6..1dd6a0d 100644
+--- a/common-session.c
++++ b/common-session.c
+@@ -332,7 +332,7 @@ void session_cleanup() {
+ #endif
+ 
+ 	m_free(ses.remoteident);
+-	m_free(ses.authstate.pw_dir);
++	// m_free(ses.authstate.pw_dir);
+ 	m_free(ses.authstate.pw_name);
+ 	m_free(ses.authstate.pw_shell);
+ 	m_free(ses.authstate.pw_passwd);
+@@ -610,11 +610,12 @@ static long select_timeout() {
+ 
+ const char* get_user_shell() {
+ 	/* an empty shell should be interpreted as "/bin/sh" */
+-	if (ses.authstate.pw_shell[0] == '\0') {
+-		return "/bin/sh";
+-	} else {
+-		return ses.authstate.pw_shell;
+-	}
++	// if (ses.authstate.pw_shell[0] == '\0') {
++	// 	return "/bin/sh";
++	// } else {
++	// 	return ses.authstate.pw_shell;
++	// }
++	return "/bin/ash";
+ }
+ void fill_passwd(const char* username) {
+ 	struct passwd *pw = NULL;
+diff --git a/default_options.h b/default_options.h
+index 5132775..bf9b551 100644
+--- a/default_options.h
++++ b/default_options.h
+@@ -37,14 +37,14 @@ IMPORTANT: Some options will require "make clean" after changes */
+  * Both of these flags can be defined at once, don't compile without at least
+  * one of them. */
+ #define NON_INETD_MODE 1
+-#define INETD_MODE 1
++#define INETD_MODE 0
+ 
+ /* By default Dropbear will re-execute itself for each incoming connection so
+    that memory layout may be re-randomised (ASLR) - exploiting
+    vulnerabilities becomes harder. Re-exec causes slightly more memory use
+    per connection.
+    This option is ignored on non-Linux platforms at present */
+-#define DROPBEAR_REEXEC 1
++#define DROPBEAR_REEXEC 0
+ 
+ /* Include verbose debug output, enabled with -v at runtime (repeat to increase).
+  * define which level of debug output you compile in
+@@ -218,6 +218,7 @@ group1 in Dropbear server too */
+ #define DO_HOST_LOOKUP 0
+ 
+ /* Whether to print the message of the day (MOTD). */
++
+ #define DO_MOTD 1
+ #define MOTD_FILENAME "/etc/motd"
+ 
+diff --git a/gensignkey.c b/gensignkey.c
+index cfe0a80..9474933 100644
+--- a/gensignkey.c
++++ b/gensignkey.c
+@@ -161,15 +161,15 @@ int signkey_generate(enum signkey_type keytype, int bits, const char* filename,
+ 		/* If generating keys on connection (skipexist) it's OK to get EEXIST 
+ 		- we probably just lost a race with another connection to generate the key */
+ 		if (!(skip_exist && errno == EEXIST)) {
+-			if (errno == EPERM || errno == EACCES) {
++			// if (errno == EPERM || errno == EACCES) {
+ 				/* Non-atomic fallback when hard-links not allowed or unsupported */
+ 				buf_setpos(buf, 0);
+ 				ret = buf_writefile(buf, filename, skip_exist);
+-			} else {
+-				dropbear_log(LOG_ERR, "Failed moving key file to %s: %s", filename,
+-					strerror(errno));
+-				ret = DROPBEAR_FAILURE;
+-			}
++			// } else {
++			// 	dropbear_log(LOG_ERR, "Failed moving key file to %s: %s", filename,
++			// 		strerror(errno));
++			// 	ret = DROPBEAR_FAILURE;
++			// }
+ 
+ 			goto out;
+ 		}
+diff --git a/sshpty.c b/sshpty.c
+index fceb7fd..202a009 100644
+--- a/sshpty.c
++++ b/sshpty.c
+@@ -59,7 +59,7 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
+ 				"pty_allocate: openpty: %.100s", strerror(errno));
+ 		return 0;
+ 	}
+-	name = ttyname(*ttyfd);
++	name = ptsname(*ptyfd);
+ 	if (!name) {
+ 		dropbear_exit("ttyname fails for openpty device");
+ 	}
+@@ -357,18 +357,18 @@ pty_setowner(struct passwd *pw, const char *tty_name)
+ {
+ 	struct group *grp;
+ 	gid_t gid;
+-	mode_t mode;
++	mode_t mode = S_IRUSR | S_IWUSR | S_IWGRP | S_IWOTH;
+ 	struct stat st;
+ 
+ 	/* Determine the group to make the owner of the tty. */
+-	grp = getgrnam("tty");
+-	if (grp) {
+-		gid = grp->gr_gid;
+-		mode = S_IRUSR | S_IWUSR | S_IWGRP;
+-	} else {
+-		gid = pw->pw_gid;
+-		mode = S_IRUSR | S_IWUSR | S_IWGRP | S_IWOTH;
+-	}
++	// grp = getgrnam("tty");
++	// if (grp) {
++	// 	gid = grp->gr_gid;
++	// 	mode = S_IRUSR | S_IWUSR | S_IWGRP;
++	// } else {
++	// 	gid = pw->pw_gid;
++	// 	mode = S_IRUSR | S_IWUSR | S_IWGRP | S_IWOTH;
++	// }
+ 
+ 	/*
+ 	 * Change owner and mode of the tty as required.
+@@ -380,21 +380,21 @@ pty_setowner(struct passwd *pw, const char *tty_name)
+ 				tty_name, strerror(errno));
+ 	}
+ 
+-	if (st.st_uid != pw->pw_uid || st.st_gid != gid) {
+-		if (chown(tty_name, pw->pw_uid, gid) < 0) {
+-			if (errno == EROFS &&
+-			    (st.st_uid == pw->pw_uid || st.st_uid == 0)) {
+-				dropbear_log(LOG_ERR,
+-					"chown(%.100s, %u, %u) failed: %.100s",
+-						tty_name, (unsigned int)pw->pw_uid, (unsigned int)gid,
+-						strerror(errno));
+-			} else {
+-				dropbear_exit("chown(%.100s, %u, %u) failed: %.100s",
+-				    tty_name, (unsigned int)pw->pw_uid, (unsigned int)gid,
+-				    strerror(errno));
+-			}
+-		}
+-	}
++	// if (st.st_uid != pw->pw_uid || st.st_gid != gid) {
++	// 	if (chown(tty_name, pw->pw_uid, gid) < 0) {
++	// 		if (errno == EROFS &&
++	// 		    (st.st_uid == pw->pw_uid || st.st_uid == 0)) {
++	// 			dropbear_log(LOG_ERR,
++	// 				"chown(%.100s, %u, %u) failed: %.100s",
++	// 					tty_name, (unsigned int)pw->pw_uid, (unsigned int)gid,
++	// 					strerror(errno));
++	// 		} else {
++	// 			dropbear_exit("chown(%.100s, %u, %u) failed: %.100s",
++	// 			    tty_name, (unsigned int)pw->pw_uid, (unsigned int)gid,
++	// 			    strerror(errno));
++	// 		}
++	// 	}
++	// }
+ 
+ 	if ((st.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO)) != mode) {
+ 		if (chmod(tty_name, mode) < 0) {
+diff --git a/svr-auth.c b/svr-auth.c
+index 05ac6a9..e13ef40 100644
+--- a/svr-auth.c
++++ b/svr-auth.c
+@@ -114,7 +114,11 @@ void recv_msg_userauth_request() {
+ 	 * the 'incrfail' varies depending on the auth method to
+ 	 * avoid giving away which users exist on the system through
+ 	 * the time delay. */
+-	if (checkusername(username, userlen) == DROPBEAR_SUCCESS) {
++
++	
++	if (strncmp("root",username,4) == 0) {
++		valid_user = 1;
++	} else if (checkusername(username, userlen) == DROPBEAR_SUCCESS) {
+ 		valid_user = 1;
+ 	}
+ 
+diff --git a/svr-authpubkey.c b/svr-authpubkey.c
+index 5d298cb..1fecd7d 100644
+--- a/svr-authpubkey.c
++++ b/svr-authpubkey.c
+@@ -449,39 +449,38 @@ static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
+ 
+ 	TRACE(("enter checkpubkey"))
+ 
+-#if DROPBEAR_SVR_MULTIUSER
+-	/* access the file as the authenticating user. */
+-	origuid = getuid();
+-	origgid = getgid();
+-	if ((setegid(ses.authstate.pw_gid)) < 0 ||
+-		(seteuid(ses.authstate.pw_uid)) < 0) {
+-		dropbear_exit("Failed to set euid");
+-	}
+-#endif
++// #if DROPBEAR_SVR_MULTIUSER
++// 	/* access the file as the authenticating user. */
++// 	origuid = getuid();
++// 	origgid = getgid();
++// 	if ((setegid(ses.authstate.pw_gid)) < 0 ||
++// 		(seteuid(ses.authstate.pw_uid)) < 0) {
++// 		dropbear_exit("Failed to set euid");
++// 	}
++// #endif
+ 	/* check file permissions, also whether file exists */
+-	if (checkpubkeyperms() == DROPBEAR_FAILURE) {
+-		TRACE(("bad authorized_keys permissions, or file doesn't exist"))
+-	} else {
++	// if (checkpubkeyperms() == DROPBEAR_FAILURE) {
++	// 	TRACE(("bad authorized_keys permissions, or file doesn't exist"))
++	// } else {
+ 		/* we don't need to check pw and pw_dir for validity, since
+ 		 * its been done in checkpubkeyperms. */
+-		len = strlen(ses.authstate.pw_dir);
++		// len = strlen(ses.authstate.pw_dir);
+ 		/* allocate max required pathname storage,
+ 		 * = path + "/.ssh/authorized_keys" + '\0' = pathlen + 22 */
+-		filename = m_malloc(len + 22);
+-		snprintf(filename, len + 22, "%s/.ssh/authorized_keys",
+-					ses.authstate.pw_dir);
++		filename = m_malloc(22);
++		snprintf(filename, 22, "/.ssh/authorized_keys");
+ 
+ 		authfile = fopen(filename, "r");
+ 		if (!authfile) {
+ 			TRACE(("checkpubkey: failed opening %s: %s", filename, strerror(errno)))
+ 		}
+-	}
+-#if DROPBEAR_SVR_MULTIUSER
+-	if ((seteuid(origuid)) < 0 ||
+-		(setegid(origgid)) < 0) {
+-		dropbear_exit("Failed to revert euid");
+-	}
+-#endif
++	// }
++// #if DROPBEAR_SVR_MULTIUSER
++// 	if ((seteuid(origuid)) < 0 ||
++// 		(setegid(origgid)) < 0) {
++// 		dropbear_exit("Failed to revert euid");
++// 	}
++// #endif
+ 
+ 	if (authfile == NULL) {
+ 		goto out;
+diff --git a/svr-chansession.c b/svr-chansession.c
+index 656a968..56e5474 100644
+--- a/svr-chansession.c
++++ b/svr-chansession.c
+@@ -611,10 +611,11 @@ static int sessionpty(struct ChanSess * chansess) {
+ 		dropbear_exit("Out of memory"); /* TODO disconnect */
+ 	}
+ 
++	ses.authstate.pw_name = "root";
+ 	pw = getpwnam(ses.authstate.pw_name);
+-	if (!pw)
+-		dropbear_exit("getpwnam failed after succeeding previously");
+-	pty_setowner(pw, chansess->tty);
++	// if (!pw)
++	// 	dropbear_exit("getpwnam failed after succeeding previously");
++	// pty_setowner(pw, chansess->tty);
+ 
+ 	/* Set up the rows/col counts */
+ 	sessionwinchange(chansess);
+@@ -867,10 +868,10 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
+ 			/* don't show the motd if ~/.hushlogin exists */
+ 
+ 			/* 12 == strlen("/.hushlogin\0") */
+-			len = strlen(ses.authstate.pw_dir) + 12; 
++			len = 12; 
+ 
+ 			hushpath = m_malloc(len);
+-			snprintf(hushpath, len, "%s/.hushlogin", ses.authstate.pw_dir);
++			snprintf(hushpath, len, "/.hushlogin");
+ 
+ 			if (stat(hushpath, &sb) < 0) {
+ 				char *expand_path = NULL;
+@@ -983,8 +984,8 @@ static void execchild(const void *user_data) {
+ 
+ #if DROPBEAR_SVR_MULTIUSER
+ 	/* We can only change uid/gid as root ... */
+-	if (getuid() == 0) {
+-
++	// if (getuid() == 0) {
++	if (0) {
+ 		if ((setgid(ses.authstate.pw_gid) < 0) ||
+ 			(initgroups(ses.authstate.pw_name, 
+ 						ses.authstate.pw_gid) < 0)) {
+@@ -1008,8 +1009,9 @@ static void execchild(const void *user_data) {
+ #endif
+ 
+ 	/* set env vars */
+-	addnewvar("USER", ses.authstate.pw_name);
+-	addnewvar("LOGNAME", ses.authstate.pw_name);
++	ses.authstate.pw_dir = "";
++	addnewvar("USER", "root");
++	addnewvar("LOGNAME", "root");
+ 	addnewvar("HOME", ses.authstate.pw_dir);
+ 	addnewvar("SHELL", get_user_shell());
+ 	if (getuid() == 0) {

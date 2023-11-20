@@ -12,7 +12,7 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      xqyjlj  
+-- @author      xqyjlj
 -- @file        rt.cpp.lua
 --
 -- Change Logs:
@@ -36,6 +36,10 @@ do
 
         target:add("ldflags", flags.ldflags_lib, {force = true})
         target:add("ldflags", "-lcxx", {force = true})
+
+        if config.arch() == "riscv64gc" then
+            target:add("ldflags", "-latomic", {force = true})
+        end
     end)
 end
 rule_end()

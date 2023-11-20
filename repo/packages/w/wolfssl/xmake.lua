@@ -12,28 +12,21 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      xqyjlj
+-- @author      zbtrs
 -- @file        xmake.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-03-06     xqyjlj       adapt debug shared
--- 2023-03-03     xqyjlj       initial version
+-- 2023-08-13     zbtrs        initial version
 --
-package("readline")
+package("wolfssl")
 do
-    set_homepage("https://tiswww.case.edu/php/chet/readline/rltop.html")
-    set_description("Library for command-line editing")
+    set_homepage("https://www.wolfssl.com/")
+    set_description("Providing secure communication for IoT, smart grid, connected home, automobiles, routers, applications, games, IP, mobile phones, the cloud, and more.")
 
-    add_urls("https://ftp.gnu.org/gnu/readline/readline-$(version).tar.gz")
-    add_urls("https://ftpmirror.gnu.org/readline/readline-$(version).tar.gz")
-
-    add_versions("8.1", "f8ceb4ee131e3232226a17f51b164afc46cd0b9e6cef344be87c65962cb82b02")
-
-    on_load(function(package)
-        package:add("deps", "ncurses", {debug = package:config("debug"), configs = {shared = package:config("shared")}})
-    end)
+    add_urls("https://github.com/wolfSSL/wolfssl/archive/refs/tags/$(version)-stable.tar.gz")
+    add_versions("v5.6.3","2e74a397fa797c2902d7467d500de904907666afb4ff80f6464f6efd5afb114a")
 
     add_configs("shared", {
         description = "Build shared library.",
@@ -49,20 +42,25 @@ do
         local cc = info.cc
         local ldflags = {}
         os.setenv("PATH", path.directory(cc) .. ":" .. os.getenv("PATH"))
-
-        if not package:config("shared") then
-            table.insert(configs, "--enable-shared=no")
-        else
+        
+        table.insert(configs, "--enable-static=yes")
+        if package:config("shared") then
             table.insert(configs, "--enable-shared=yes")
+        else
+            table.insert(configs, "--enable-shared=no")
         end
-
-        local buildenvs = import("package.tools.autoconf").buildenvs(package)
-
+        table.insert(configs,"--enable-sslv3=yes")
+        table.insert(configs,"--enable-ecc=yes")
+        table.insert(configs,"--enable-tlsx=yes")
+        table.insert(configs,"--enable-stunnel=yes")
+        table.insert(configs,"--enable-opensslextra=yes")
+        table.insert(configs,"--enable-openssh=yes")
+        table.insert(configs,"--enable-tlsv10=yes")
+        
+        local buildenvs = import("package.tools.autoconf").buildenvs(package, {ldflags = ldflags})
         import("package.tools.autoconf").configure(package, configs, {envs = buildenvs})
         import("package.tools.make").install(package, {}, {envs = buildenvs})
     end)
 
-    on_test(function(package)
-        assert(package:has_cfuncs("readline", {includes = {"stdio.h", "readline/readline.h"}}))
-    end)
+
 end

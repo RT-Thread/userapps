@@ -12,22 +12,22 @@
 --
 -- Copyright (C) 2022-2023 RT-Thread Development Team
 --
--- @author      xqyjlj
+-- @author      zbtrs  
 -- @file        xmake.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-03-10     xqyjlj       initial version
+-- 2023-08-09     zbtrs       initial version
 --
 
 add_rules("mode.debug", "mode.release")
 
-add_requires("zlib")
+add_requires("ffmpeg")
 
-target("zlib")
+target("ffmpeg")
 do
-    add_files("*.c")
-    add_packages("zlib")
+    set_kind("phony")
+    add_packages("ffmpeg")
 end
 target_end()

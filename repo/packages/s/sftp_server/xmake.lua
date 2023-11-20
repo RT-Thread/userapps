@@ -12,25 +12,22 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      xqyjlj
+-- @author      zbtrs
 -- @file        xmake.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-05-04     xqyjlj       initial version
+-- 2023-09-08     zbtrs        initial version
 --
-package("busybox")
+package("sftp_server")
 do
-    set_homepage("https://www.busybox.net/")
-    set_description("BusyBox: The Swiss Army Knife of Embedded Linux.")
-
-    add_urls("https://www.busybox.net/downloads/busybox-$(version).tar.bz2")
-
-    add_versions("1.35.0", "faeeb244c35a348a334f4a59e44626ee870fb07b6884d68c10ae8bc19f83a694")
-
-    add_patches("1.35.0", path.join(os.scriptdir(), "patches", "1.35.0", "01_adapt_smart.diff"),
-                "897875a5c8af75164d2e089e9f3869ad4ee0a329f7ee80b4a9752c88ba18c8cc")
+    set_homepage("https://github.com/zbtrs/sftpserver")
+    set_description("This is an SFTP server supporting up to protocol version 6. It is possible to use it as a drop-in replacement for the OpenSSH server.")
+    
+    add_urls("https://github.com/zbtrs/sftpserver/archive/refs/tags/V$(version).tar.gz")
+    
+    add_versions("1.0","2ee448f196ed1132ca60fc6bb7d49285419058433f892380d8aee75059be4c87")
 
     on_install("cross@linux", function(package)
         import("rt.private.build.rtflags")
@@ -38,10 +35,11 @@ do
         local version = info.version
         local host = info.host
         local cc = info.cc
-        local configs = {host = ""}
+        local configs = {host = host}
         local ldflags = {}
-        local cxflags = {"-O2"}
+        local cxflags = {}
         os.setenv("PATH", path.directory(cc) .. ":" .. os.getenv("PATH"))
+        print(path.directory(cc))
 
         local ldscript = rtflags.get_ldscripts(false)
         table.join2(ldflags, ldscript.ldflags)
@@ -50,16 +48,23 @@ do
         table.join2(ldflags, sdk.ldflags)
         table.join2(cxflags, sdk.cxflags)
 
-        os.vcp(path.join(os.scriptdir(), "port", version, ".config"), ".")
-        io.gsub(".config", "CONFIG_PREFIX=.-\n", 'CONFIG_PREFIX="' .. package:installdir() .. '"')
-        local buildenvs = import("package.tools.autoconf").buildenvs(package, {cxflags = cxflags})
+        local buildenvs = import("package.tools.autoconf").buildenvs(package, {
+            cxflags = cxflags,
+            ldflags = ldflags
+        })
+
         buildenvs["CROSS_COMPILE"] = host .. "-"
-        buildenvs.LDFLAGS = table.concat(ldflags, " ")
+        buildenvs.LDFLAGS = table.concat(ldflags, " ")        
+        table.insert(configs,"--disable-largefile")
+        table.insert(configs,"--with-threads=1")
+        os.vrun("./autogen.sh", {envs = buildenvs})
+        import("package.tools.autoconf").configure(package,configs,{envs = buildenvs})
         import("package.tools.make").build(package, {}, {envs = buildenvs})
         import("package.tools.make").build(package, {"install"}, {envs = buildenvs})
     end)
 
     on_test(function(package)
-        assert(os.isfile(path.join(package:installdir("bin"), "busybox")))
+        assert(os.isfile(path.join(package:installdir("libexec"), "gesftpserver")))
     end)
+
 end
