@@ -68,12 +68,11 @@ function deploy_package(rootfs)
         local requireinfo = instance:requireinfo()
         local repo = instance:repo()
         local packagename = requireinfo.originstr
-        local packageversion = requireinfo.version
         local installdir = instance:installdir()
         local repodir = repo:url()
         local reponame = repo:name()
-        if(packageversion ~= "latest") then
-            packagename = string.match(packagename,"%S+")
+        if string.find(packagename, "%s") then
+            packagename = string.match(packagename, "%S+")
         end
         local deploy_script =
             path.join(repodir, "packages", packagename:sub(1, 1), packagename, "scripts", "deploy.lua")
@@ -95,13 +94,12 @@ function export_package_to_sdkdir(sdkdir)
     for _, instance in ipairs(package.load_packages(requires, {requires_extra = requires_extra})) do
         local requireinfo = instance:requireinfo()
         local packagename = requireinfo.originstr
-        local packageversion = requireinfo.version
         local repo = instance:repo()
         local repodir = repo:url()
         local reponame = repo:name()
         local installdir = instance:installdir()
-        if(packageversion ~= "latest") then
-            packagename = string.match(packagename,"%S+")
+        if string.find(packagename, "%s") then
+            packagename = string.match(packagename, "%S+")
         end
         local export_script =
             path.join(repodir, "packages", packagename:sub(1, 1), packagename, "scripts", "export.lua")
