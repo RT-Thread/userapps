@@ -72,7 +72,7 @@ function deploy_package(rootfs)
         local repodir = repo:url()
         local reponame = repo:name()
         if string.find(packagename, "%s") then
-            packagename = string.match(packagename,"%S+")
+            packagename = string.match(packagename, "%S+")
         end
         local deploy_script =
             path.join(repodir, "packages", packagename:sub(1, 1), packagename, "scripts", "deploy.lua")
@@ -99,7 +99,7 @@ function export_package_to_sdkdir(sdkdir)
         local reponame = repo:name()
         local installdir = instance:installdir()
         if string.find(packagename, "%s") then
-            packagename = string.match(packagename,"%S+")
+            packagename = string.match(packagename, "%S+")
         end
         local export_script =
             path.join(repodir, "packages", packagename:sub(1, 1), packagename, "scripts", "export.lua")
