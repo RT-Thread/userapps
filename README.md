@@ -1,8 +1,6 @@
 # 介绍与快速入门
 
 > 本文档环境为 `ubuntu 20.04`
->
-> 更多文档请前往 https://club.rt-thread.org/ask/article/1c95a3e1c58c0c25.html
 
 ## 介绍
 
@@ -38,19 +36,7 @@ xmake 是一个基于 Lua 的轻量级跨平台构建工具，使用 xmake.lua �
    sudo apt install xmake
    ```
 
-3. **安装 qemu**
-
-   userapps 已提供 qemu 7.1.0 的安装包，请自行下载 https://download-redirect.rt-thread.org/download/rt-smart/native/tools/qemu/qemu_7.1.0-2022111713_amd64.deb
-
-   ```shell
-   sudo apt-get install -y libglib2.0-dev libpixman-1-dev
-   curl -L https://download-redirect.rt-thread.org/download/rt-smart/native/tools/qemu/qemu_7.1.0-2022111713_amd64.deb -o ./qemu.deb
-   sudo dpkg -i ./qemu.deb
-   ```
-
-   如若想安装最新版本，请自行下载 qemu 源码进行编译安装
-
-4. **编译**
+3. **编译**
 
    由于 smart 采用 xmake 编译用户态环境，因此 smart 的编译方式非常简单。
 
@@ -70,29 +56,16 @@ xmake 是一个基于 Lua 的轻量级跨平台构建工具，使用 xmake.lua �
 
    ![image-20230531173059551](./assets/image-20230531173059551.png)
 
-5. **镜像制作**
+4. **镜像制作**
 
    运行 `xmake smart-rootfs` 制作 rootfs ，运行 `xmake smart-image` 制作镜像
 
    ```shell
    xmake smart-rootfs
-   xmake smart-image -o ../prebuilt/qemu-virt64-aarch64/ext4.img # 将镜像输出至 qemu-virt64-aarch64 目录
+   xmake smart-image -f ext4 #制作 ext4 镜像
    ```
 
    ![image-20230531173829621](./assets/image-20230531173829621.png)
-
-6. **运行 qemu**
-
-   进入 `userapp/prebuilt/qemu-virt64-aarch64`，运行 qemu.sh 脚本启动 qemu
-
-   ```shell
-   cd prebuilt/qemu-virt64-aarch64/
-   ./run.sh
-   ```
-
-   ![image-20230531174321326](./assets/image-20230531174321326.png)
-
-   在 qemu 中 输入 `ctrl+a` 抬起后，再输入 `x` 即可退出 qemu
 
 ## prebuilt 的版本
 
