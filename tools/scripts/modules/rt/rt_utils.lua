@@ -73,8 +73,12 @@ function cp_with_symlink(srcpath, dstpath, opt)
     else
         option = opt or {symlink = true}
     end
-    os.tryrm(dstpath)
-    os.vcp(srcpath, dstpath, option)
+    if (opt and opt.del == false) then
+        os.execv("cp -r", {srcpath, dstpath})
+    else
+        os.tryrm(dstpath)
+        os.vcp(srcpath, dstpath, option)
+    end
 end
 
 function dirsize(dir)
