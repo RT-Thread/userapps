@@ -36,7 +36,7 @@ do
         if (version and sha256) then
             add_versions(version, sha256)
         else
-            add_versions("203957-8a397096c1", "0c4a43bc40ddee60774ce384d13760d235e51fd70658c5da0503caec1dd511e4")
+            add_versions("222725-8a397096c1", "488b1c8a5b82d94a57eff16c5ed705e91196eff4fda81ade9516da16241e007c")
         end
     elseif is_host("linux") then
         add_urls(
@@ -45,7 +45,7 @@ do
         if (version and sha256) then
             add_versions(version, sha256)
         else
-            add_versions("203957-8a397096c1", "19d9a73b1dff1d941953fcb673443259d89362c2e56d1d260af0cc503d9e9f5b")
+            add_versions("222725-8a397096c1", "6d4b67648f8471910323a0fe39d8d4a58153a5d81ea24362a8cf48d4f1894181")
         end
     end
 
