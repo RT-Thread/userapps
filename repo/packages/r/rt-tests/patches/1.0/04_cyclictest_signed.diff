@@ -1,0 +1,33 @@
+diff --git a/src/cyclictest/cyclictest.c b/src/cyclictest/cyclictest.c
+index dc33eca..1129c87 100644
+--- a/src/cyclictest/cyclictest.c
++++ b/src/cyclictest/cyclictest.c
+@@ -154,8 +154,8 @@ struct thread_param {
+ 
+ /* Struct for statistics */
+ struct thread_stat {
+-	unsigned long cycles;
+-	unsigned long cyclesread;
++	long cycles;
++	long cyclesread;
+ 	long min;
+ 	long max;
+ 	long act;
+@@ -172,7 +172,7 @@ struct thread_stat {
+ 	long cycleofmax;
+ 	long hist_overflow;
+ 	long num_outliers;
+-	unsigned long smi_count;
++	long smi_count;
+ };
+ 
+ static pthread_mutex_t trigger_lock = PTHREAD_MUTEX_INITIALIZER;
+@@ -1088,7 +1088,7 @@ static void *timerthread(void *param)
+ 
+ 	while (!shutdown) {
+ 
+-		uint64_t diff;
++		int64_t diff;
+ 		unsigned long diff_smi = 0;
+ 		int sigs, ret;
+ 

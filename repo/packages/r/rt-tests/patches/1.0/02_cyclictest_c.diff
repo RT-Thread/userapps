@@ -1,0 +1,65 @@
+diff --git a/src/cyclictest/cyclictest.c b/src/cyclictest/cyclictest.c
+index 3f1bef1..dc33eca 100644
+--- a/src/cyclictest/cyclictest.c
++++ b/src/cyclictest/cyclictest.c
+@@ -25,7 +25,6 @@
+ #include <time.h>
+ #include <errno.h>
+ #include <limits.h>
+-#include <linux/unistd.h>
+ 
+ #include <sys/prctl.h>
+ #include <sys/stat.h>
+@@ -56,7 +55,7 @@
+ 
+ /* Ugly, but .... */
+ #define gettid() syscall(__NR_gettid)
+-#define sigev_notify_thread_id _sigev_un._tid
++#define sigev_notify_thread_id __sev_fields.sigev_notify_thread_id
+ 
+ #ifdef __UCLIBC__
+ #define MAKE_PROCESS_CPUCLOCK(pid, clock) \
+@@ -1009,18 +1008,18 @@ static void *timerthread(void *param)
+ 	sigprocmask(SIG_BLOCK, &sigset, NULL);
+ 
+ 	if (par->mode == MODE_CYCLIC) {
+-		sigev.sigev_notify = SIGEV_THREAD_ID | SIGEV_SIGNAL;
++		sigev.sigev_notify = 4 | SIGEV_SIGNAL;
+ 		sigev.sigev_signo = par->signal;
+-		sigev.sigev_notify_thread_id = stat->tid;
++		// sigev.sigev_notify_thread_id = stat->tid;
+ 		timer_create(par->clock, &sigev, &timer);
+ 		tspec.it_interval = interval;
+ 	}
+ 
+ 	memset(&schedp, 0, sizeof(schedp));
+ 	schedp.sched_priority = par->prio;
+-	if (setscheduler(0, par->policy, &schedp))
+-		fatal("timerthread%d: failed to set priority to %d\n",
+-		      par->cpu, par->prio);
++   if (setscheduler(0, par->policy, &schedp)) 
++		fatal("timerthread%d: failed to set priority to %d\n", 
++ 	         par->cpu, par->prio); 
+ 
+ 	if(smi) {
+ 		par->msr_fd = open_msr_file(par->cpu);
+@@ -1257,7 +1256,7 @@ out:
+ 		close(par->msr_fd);
+ 	/* switch to normal */
+ 	schedp.sched_priority = 0;
+-	sched_setscheduler(0, SCHED_OTHER, &schedp);
++	// sched_setscheduler(0, SCHED_OTHER, &schedp);
+ 	stat->threadstarted = -1;
+ 
+ 	return NULL;
+@@ -2195,8 +2194,8 @@ int main(int argc, char **argv)
+ 
+ 	process_options(argc, argv, max_cpus);
+ 
+-	if (check_privs())
+-		exit(EXIT_FAILURE);
++	// if (check_privs())
++	// 	exit(EXIT_FAILURE);
+ 
+ 	if (verbose)
+ 		printf("Max CPUs = %d\n", max_cpus);

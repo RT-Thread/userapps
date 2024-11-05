@@ -1,0 +1,22 @@
+diff --git a/Makefile b/Makefile
+index 569adc1..3fae87e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -98,7 +98,7 @@ $(OBJDIR):
+ 	mkdir $(OBJDIR)
+ 
+ # Include dependency files, automatically generate them if needed.
+--include $(addprefix $(OBJDIR)/,$(sources:.c=.d))
++# -include $(addprefix $(OBJDIR)/,$(sources:.c=.d))
+ 
+ cyclictest: $(OBJDIR)/cyclictest.o $(OBJDIR)/librttest.a
+ 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS) $(RTTESTLIB) $(NUMA_LIBS)
+@@ -162,7 +162,7 @@ rebuild:
+ 	$(MAKE) all
+ 
+ .PHONY: install
+-install: all install_hwlatdetect
++install: install_hwlatdetect
+ 	mkdir -p "$(DESTDIR)$(bindir)" "$(DESTDIR)$(mandir)/man4"
+ 	mkdir -p "$(DESTDIR)$(srcdir)" "$(DESTDIR)$(mandir)/man8"
+ 	cp $(TARGETS) "$(DESTDIR)$(bindir)"
