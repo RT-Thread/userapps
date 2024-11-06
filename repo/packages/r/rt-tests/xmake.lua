@@ -56,6 +56,9 @@ do
         local configs = {}
         os.setenv("PATH", path.directory(cc) .. ":" .. os.getenv("PATH"))
 
+        if info.arch == "x86_64" then
+            table.insert(configs, "NUMA=0")
+        end
         local buildenvs = import("package.tools.autoconf").buildenvs(package, {ldflags = ldflags})
         buildenvs["prefix"] = package:installdir()
         if package:config("cyclictest") then
