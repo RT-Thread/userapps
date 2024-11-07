@@ -30,7 +30,7 @@ do
     add_versions("1.35.0", "faeeb244c35a348a334f4a59e44626ee870fb07b6884d68c10ae8bc19f83a694")
 
     add_patches("1.35.0", path.join(os.scriptdir(), "patches", "1.35.0", "01_adapt_smart.diff"),
-                "897875a5c8af75164d2e089e9f3869ad4ee0a329f7ee80b4a9752c88ba18c8cc")
+                "a72603138d08b1280efca029b940434a4a56c5c2a8d75e1280f69c6bacf91cde")
 
     on_install("cross@linux", function(package)
         import("rt.private.build.rtflags")
@@ -52,11 +52,20 @@ do
 
         os.vcp(path.join(os.scriptdir(), "port", version, ".config"), ".")
         io.gsub(".config", "CONFIG_PREFIX=.-\n", 'CONFIG_PREFIX="' .. package:installdir() .. '"')
+
+        if package:config("debug") then
+            io.gsub(".config", "# CONFIG_DEBUG_PESSIMIZE is not set", 'CONFIG_DEBUG_PESSIMIZE=y')
+        end
+
         local buildenvs = import("package.tools.autoconf").buildenvs(package, {cxflags = cxflags})
         buildenvs["CROSS_COMPILE"] = host .. "-"
-        buildenvs.LDFLAGS = table.concat(ldflags, " ")
+        -- buildenvs.LDFLAGS = table.concat(ldflags, " ")
         import("package.tools.make").build(package, {}, {envs = buildenvs})
         import("package.tools.make").build(package, {"install"}, {envs = buildenvs})
+
+        if package:config("debug") then
+            os.vcp("busybox_unstripped", path.join(package:installdir("bin"), "busybox"))
+        end
     end)
 
     on_test(function(package)
