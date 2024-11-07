@@ -59,7 +59,7 @@ do
 
         local buildenvs = import("package.tools.autoconf").buildenvs(package, {cxflags = cxflags})
         buildenvs["CROSS_COMPILE"] = host .. "-"
-        -- buildenvs.LDFLAGS = table.concat(ldflags, " ")
+        buildenvs.LDFLAGS = table.concat(ldflags, " ")
         import("package.tools.make").build(package, {}, {envs = buildenvs})
         import("package.tools.make").build(package, {"install"}, {envs = buildenvs})
 
