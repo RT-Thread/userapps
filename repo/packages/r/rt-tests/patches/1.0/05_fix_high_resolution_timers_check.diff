@@ -1,0 +1,13 @@
+diff --git a/src/cyclictest/cyclictest.c b/src/cyclictest/cyclictest.c
+index 1129c87..a648246 100644
+--- a/src/cyclictest/cyclictest.c
++++ b/src/cyclictest/cyclictest.c
+@@ -1917,7 +1917,7 @@ static int check_timer(void)
+ 	if (clock_getres(CLOCK_MONOTONIC, &ts))
+ 		return 1;
+
+-	return (ts.tv_sec != 0 || ts.tv_nsec != 1);
++	return (ts.tv_sec != 0 || ts.tv_nsec == 0);
+ }
+
+ static void sighand(int sig)

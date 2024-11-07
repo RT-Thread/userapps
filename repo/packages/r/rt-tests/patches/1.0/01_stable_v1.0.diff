@@ -1,0 +1,61 @@
+diff --git a/Makefile b/Makefile
+index 5110357..569adc1 100644
+--- a/Makefile
++++ b/Makefile
+@@ -172,6 +172,7 @@ install: all install_hwlatdetect
+ 	gzip -c src/cyclictest/cyclictest.8 >"$(DESTDIR)$(mandir)/man8/cyclictest.8.gz"
+ 	gzip -c src/pi_tests/pi_stress.8 >"$(DESTDIR)$(mandir)/man8/pi_stress.8.gz"
+ 	gzip -c src/ptsematest/ptsematest.8 >"$(DESTDIR)$(mandir)/man8/ptsematest.8.gz"
++	gzip -c src/rt-migrate-test/rt-migrate-test.8 >"$(DESTDIR)$(mandir)/man8/rt-migrate-test.8.gz"
+ 	gzip -c src/sigwaittest/sigwaittest.8 >"$(DESTDIR)$(mandir)/man8/sigwaittest.8.gz"
+ 	gzip -c src/svsematest/svsematest.8 >"$(DESTDIR)$(mandir)/man8/svsematest.8.gz"
+ 	gzip -c src/pmqtest/pmqtest.8 >"$(DESTDIR)$(mandir)/man8/pmqtest.8.gz"
+diff --git a/src/cyclictest/cyclictest.c b/src/cyclictest/cyclictest.c
+index 00e5f3d..3f1bef1 100644
+--- a/src/cyclictest/cyclictest.c
++++ b/src/cyclictest/cyclictest.c
+@@ -927,10 +927,14 @@ static int has_smi_counter(void)
+ 	case 0x56:      /* BDX-DE */
+ 	case 0x4E:      /* SKL */
+ 	case 0x5E:      /* SKL */
++	case 0x8E:      /* KBL */
++	case 0x9E:      /* KBL */
++	case 0x55:      /* SKX */
+ 	case 0x37:      /* BYT */
+ 	case 0x4D:      /* AVN */
+ 	case 0x4C:      /* AMT */
+ 	case 0x57:      /* PHI */
++	case 0x5C:      /* BXT */
+ 		break;
+ 	default:
+ 		return 0;
+@@ -1684,7 +1688,6 @@ static void process_options (int argc, char *argv[], int max_cpus)
+ 		case 'R':
+ 		case OPT_RESOLUTION:
+ 			check_clock_resolution = 1; break;
+-		case 's':
+ 		case OPT_SECALIGNED:
+ 			secaligned = 1;
+ 			if (optarg != NULL)
+@@ -1694,6 +1697,7 @@ static void process_options (int argc, char *argv[], int max_cpus)
+ 			else
+ 				offset = 0;
+ 			break;
++		case 's':
+ 		case OPT_SYSTEM:
+ 			use_system = MODE_SYS_OFFSET; break;
+ 		case 'S':
+diff --git a/src/rt-migrate-test/rt-migrate-test.c b/src/rt-migrate-test/rt-migrate-test.c
+index d7b68dd..0a0bb77 100644
+--- a/src/rt-migrate-test/rt-migrate-test.c
++++ b/src/rt-migrate-test/rt-migrate-test.c
+@@ -20,9 +20,6 @@
+  *
+  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  */
+-#ifndef _GNU_SOURCE
+-#define _GNU_SOURCE
+-#endif
+ #include <stdio.h>
+ #ifndef __USE_XOPEN2K
+ # define __USE_XOPEN2K
