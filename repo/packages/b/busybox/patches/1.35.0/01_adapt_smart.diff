@@ -119,6 +119,19 @@ index fe3cb9e75..a039708ae 100644
  			} else {
  				/* SysV style init assumed */
  				/* runlevels:
+diff --git a/init/init.c b/init/init.c
+index efab5dcb4..a62f1e8df 100644
+--- a/init/init.c
++++ b/init/init.c
+@@ -131,7 +131,7 @@
+ #include "common_bufsiz.h"
+ #include <syslog.h>
+ #ifdef __linux__
+-# include <linux/vt.h>
++//# include <linux/vt.h>
+ # include <sys/sysinfo.h>
+ #endif
+ #include "reboot.h" /* reboot() constants */
 diff --git a/libbb/copyfd.c b/libbb/copyfd.c
 index 7f9d92ea9..e88c62e5a 100644
 --- a/libbb/copyfd.c
@@ -139,6 +152,31 @@ index 7f9d92ea9..e88c62e5a 100644
  			size > buffer_size ? buffer_size : size);
  		if (rd < 0) {
  			bb_simple_perror_msg(bb_msg_read_error);
+diff --git a/libbb/find_pid_by_name.c b/libbb/find_pid_by_name.c
+index fe13f7211..8bddb20f1 100644
+--- a/libbb/find_pid_by_name.c
++++ b/libbb/find_pid_by_name.c
+@@ -85,16 +85,19 @@ pid_t* FAST_FUNC find_pid_by_name(const char *procName)
+ 	procps_status_t* p = NULL;
+ 
+ 	pidList = xzalloc(sizeof(*pidList));
+-	while ((p = procps_scan(p, PSSCAN_PID|PSSCAN_COMM|PSSCAN_ARGVN|PSSCAN_EXE))) {
++	//while ((p = procps_scan(p, PSSCAN_PID|PSSCAN_COMM|PSSCAN_ARGVN|PSSCAN_EXE))) {
++	while ((p = procps_scan(p, PSSCAN_PID|PSSCAN_COMM|PSSCAN_ARGVN))) {
+ 		if (comm_match(p, procName)
+ 		/* or we require argv0 to match (essential for matching reexeced /proc/self/exe)*/
+ 		 || (p->argv0 && strcmp(bb_basename(p->argv0), procName) == 0)
+ 		/* or we require /proc/PID/exe link to match */
++		#if 0
+ 		 || (p->exe && strcmp(
+ 					procName[0] == '/' ? p->exe /* support "pidof /path/to/binary" case too */
+ 							: bb_basename(p->exe),
+ 					procName
+ 					) == 0)
++		#endif
+ 		) {
+ 			pidList = xrealloc_vector(pidList, 2, i);
+ 			pidList[i++] = p->pid;
 diff --git a/libbb/loop.c b/libbb/loop.c
 index cb8fa2442..58677486b 100644
 --- a/libbb/loop.c
@@ -340,6 +378,210 @@ index cb8fa2442..58677486b 100644
  typedef struct loop_info64 bb_loop_info;
  # define BB_LOOP_SET_STATUS LOOP_SET_STATUS64
  # define BB_LOOP_GET_STATUS LOOP_GET_STATUS64
+diff --git a/libbb/wfopen.c b/libbb/wfopen.c
+index 1c7f7f3d7..a3f255b0c 100644
+--- a/libbb/wfopen.c
++++ b/libbb/wfopen.c
+@@ -12,7 +12,7 @@ FILE* FAST_FUNC fopen_or_warn(const char *path, const char *mode)
+ {
+ 	FILE *fp = fopen(path, mode);
+ 	if (!fp) {
+-		bb_simple_perror_msg(path);
++		//bb_simple_perror_msg(path);
+ 		//errno = 0; /* why? */
+ 	}
+ 	return fp;
+diff --git a/miscutils/devmem2.c b/miscutils/devmem2.c
+new file mode 100644
+index 000000000..8a9cf44fd
+--- /dev/null
++++ b/miscutils/devmem2.c
+@@ -0,0 +1,185 @@
++/*
++ * Copyright (C) 2000, Jan-Derk Bakker (J.D.Bakker@its.tudelft.nl)
++ * Copyright (C) 2008, BusyBox Team. -solar 4/26/08
++ * Licensed under GPLv2 or later, see file LICENSE in this source tree.
++ */
++//config:config DEVMEM2
++//config:	bool "devmem2 (2.5 kb)"
++//config:	default y
++//config:	help
++//config:	devmem2_main is a small program that reads and writes from physical
++//config:	memory using /dev/mem.
++
++//applet:IF_DEVMEM2(APPLET(devmem2, BB_DIR_SBIN, BB_SUID_DROP))
++
++//kbuild:lib-$(CONFIG_DEVMEM2) += devmem2.o
++
++//usage:#define devmem2_trivial_usage
++//usage:	"ADDRESS [WIDTH [VALUE]]"
++//usage:#define devmem2_full_usage "\n\n"
++//usage:       "Read/write from physical address\n"
++//usage:     "\n	ADDRESS	Address to act upon"
++//usage:     "\n	WIDTH	Width (8/16/...)"
++//usage:     "\n	VALUE	Data to be written"
++
++#include "libbb.h"
++#include <stdio.h>
++#include <stdlib.h>
++#include <stdint.h>
++#include <unistd.h>
++#include <fcntl.h>
++#include <sys/ioctl.h>
++
++#define MEM_DEVICE_NAME     "/dev/mem"
++
++int flag = 0;//read
++uint64_t writeval = 0; //write
++
++#define MEM_IOCTL_MMAP_BASE         'm'
++#define MEM_IOCTL_USER_MMAP         _IO(MEM_IOCTL_MMAP_BASE, 1)
++#define MEM_IOCTL_USER_MUNMAP       _IO(MEM_IOCTL_MMAP_BASE, 2)
++
++#pragma pack(push)  /* push current alignment to stack */
++#pragma pack(4)     /* set alignment to 4 byte boundary */
++
++struct mem_query_phys
++{
++    int fd;
++    uint64_t phys_addrs;
++    uint64_t size;
++    void *data;
++};
++
++static int mem_fd = -1;
++
++struct map_addr_info
++{
++    uint32_t phyAddr;
++    size_t mapSize;
++    size_t mapMode;
++    void *virtAddr;
++};
++
++int phys_addr_map(struct map_addr_info *info)
++{
++    int ret;
++    struct mem_query_phys mem_info = { 0 };
++
++    if (!info)
++        return -1;
++
++    mem_fd = open(MEM_DEVICE_NAME, O_RDWR);
++    if (mem_fd < 0)
++    {
++        printf("mem device open failed\n");
++        return -1;
++    }
++
++    mem_info.phys_addrs = (uint64_t)info->phyAddr;
++    mem_info.size = (uint64_t)info->mapSize;
++
++    ret = ioctl(mem_fd, MEM_IOCTL_USER_MMAP, &mem_info);
++    if (ret)
++    {
++        printf("mmap failed\n");
++        return -1;
++    }
++
++    info->virtAddr = mem_info.data;
++
++    return 0;
++}
++
++int phys_addr_unmap(struct map_addr_info *info)
++{
++    struct mem_query_phys mem_info;
++    mem_info.data = info->virtAddr;
++    mem_info.size = (uint64_t)info->mapSize;
++    mem_info.phys_addrs = (uint64_t)info->phyAddr;
++
++    if (mem_fd < 0)
++    {
++        return -1;
++    }
++
++    return ioctl(mem_fd, MEM_IOCTL_USER_MUNMAP, &mem_info);
++}
++
++void devmem2(uint32_t trace_dump_hdr, uint32_t dump_len, int flag)
++{
++	uint64_t read_result;
++    int ret;
++
++    struct map_addr_info info =
++    {
++        .phyAddr = trace_dump_hdr,
++        .mapSize = dump_len,
++        .mapMode = 0,
++    };
++
++    ret= phys_addr_map(&info);
++
++	if (!flag) {
++		switch (dump_len) {
++		case 8:
++			read_result = *(volatile uint8_t*)info.virtAddr;
++			break;
++		case 16:
++			read_result = *(volatile uint16_t*)info.virtAddr;
++			break;
++		case 32:
++			read_result = *(volatile uint32_t*)info.virtAddr;
++			break;
++		case 64:
++			read_result = *(volatile uint64_t*)info.virtAddr;
++			break;
++		default:
++			bb_simple_error_msg_and_die("bad width");
++		}
++		printf("0x%0*llX\n", (dump_len >> 2), (unsigned long long)read_result);
++	} else {
++		switch (dump_len) {
++		case 8:
++			*(volatile uint8_t*)info.virtAddr = writeval;
++			break;
++		case 16:
++			*(volatile uint16_t*)info.virtAddr = writeval;
++			break;
++		case 32:
++			*(volatile uint32_t*)info.virtAddr = writeval;
++			break;
++		case 64:
++			*(volatile uint64_t*)info.virtAddr = writeval;
++			break;
++		default:
++			bb_simple_error_msg_and_die("bad width");
++		}
++	}
++}
++
++int devmem2_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
++int devmem2_main(int argc UNUSED_PARAM, char **argv)
++{
++    uint32_t dump_addr;
++    uint32_t dump_len;
++
++    if (argc > 1)
++        dump_addr = strtoul(argv[1], 0, 0);
++    else
++        bb_show_usage();
++
++    if (argc > 2)
++        dump_len = strtoul(argv[2], 0, 0);
++    else
++        dump_len = 8 * sizeof(int);
++
++	if (argc > 3)
++	{
++		flag = 1;
++		writeval = bb_strtoull(argv[3], NULL, 0);
++	}
++
++    devmem2(dump_addr, dump_len, flag);
++
++	return EXIT_SUCCESS;
++}
 diff --git a/miscutils/partprobe.c b/miscutils/partprobe.c
 index 0fb1927b7..5a2915ef5 100644
 --- a/miscutils/partprobe.c
@@ -803,6 +1045,102 @@ index 0d6a289c7..358b5aae1 100644
 -	}
 +    }
  }
+diff --git a/networking/ping.c b/networking/ping.c
+index 86d8088de..a7d96f589 100644
+--- a/networking/ping.c
++++ b/networking/ping.c
+@@ -530,6 +530,38 @@ static void sendping_tail(void (*sp)(int), int size_pkt)
+ 		bb_simple_error_msg_and_die(bb_msg_write_error);
+ 
+ 	if (pingcount == 0 || G.ntransmitted < pingcount) {
++		struct sigaction sa;
++		sa.sa_handler = sp;
++		sigemptyset(&sa.sa_mask);
++		sa.sa_flags = 0;
++
++		if (sigaction(SIGALRM, &sa, NULL) == -1) {
++			perror("Error setting SIGALRM signal handler");
++			return 1;
++		}
++
++		timer_t timerid;
++		struct sigevent sev;
++		sev.sigev_notify = SIGEV_SIGNAL;
++		sev.sigev_signo = SIGALRM;
++		sev.sigev_value.sival_ptr = &timerid;
++
++		if (timer_create(CLOCK_REALTIME, &sev, &timerid) == -1) {
++			perror("Error creating timer");
++			return 1;
++		}
++
++		struct itimerspec its;
++		its.it_value.tv_sec = G.interval_us / 1000000;
++		its.it_value.tv_nsec = G.interval_us % 1000000 /1000;
++		its.it_interval.tv_sec = 0;
++		its.it_interval.tv_nsec = 0;
++
++		if (timer_settime(timerid, 0, &its, NULL) == -1) {
++			perror("Error setting timer");
++			return 1;
++		}
++		#if 0
+ 		/* Didn't send all pings yet - schedule next in -i SEC interval */
+ 		struct itimerval i;
+ 		signal(SIGALRM, sp);
+@@ -539,6 +571,7 @@ static void sendping_tail(void (*sp)(int), int size_pkt)
+ 		i.it_value.tv_sec = G.interval_us / 1000000;
+ 		i.it_value.tv_usec = G.interval_us % 1000000;
+ 		setitimer(ITIMER_REAL, &i, NULL);
++		#endif
+ 	} else { /* -c NN, and all NN are sent */
+ 		/* Wait for the last ping to come back.
+ 		 * -W timeout: wait for a response in seconds.
+@@ -801,7 +834,7 @@ static void ping4(len_and_sockaddr *lsa)
+ 		c = recvfrom(pingsock, G.rcv_packet, G.sizeof_rcv_packet, 0,
+ 				(struct sockaddr *) &from, &fromlen);
+ 		if (c < 0) {
+-			if (errno != EINTR)
++			if (errno != EINTR && errno != EAGAIN)
+ 				bb_simple_perror_msg("recvfrom");
+ 			continue;
+ 		}
+diff --git a/procps/top.c b/procps/top.c
+index 4cd545c69..56c54ee03 100644
+--- a/procps/top.c
++++ b/procps/top.c
+@@ -596,7 +596,7 @@ static unsigned long display_header(int scr_width, int *lines_rem_p)
+ 	open_read_close("loadavg", buf, sizeof(scrbuf) - sizeof("Load average: "));
+ 	scrbuf[scr_width - 1] = '\0';
+ 	strchrnul(buf, '\n')[0] = '\0';
+-	puts(scrbuf);
++	//puts(scrbuf);
+ 	(*lines_rem_p)--;
+ 
+ 	return meminfo[MI_MEMTOTAL];
+@@ -621,7 +621,7 @@ static NOINLINE void display_process_list(int lines_rem, int scr_width)
+ 
+ 	/* what info of the processes is shown */
+ 	printf(OPT_BATCH_MODE ? "%.*s" : ESC"[7m" "%.*s" ESC"[m", scr_width,
+-		"  PID  PPID USER     STAT   VSZ %VSZ"
++		"  PID  PPID STAT    VSZ     %VSZ"
+ 		IF_FEATURE_TOP_SMP_PROCESS(" CPU")
+ 		IF_FEATURE_TOP_CPU_USAGE_PERCENTAGE(" %CPU")
+ 		" COMMAND");
+@@ -700,11 +700,11 @@ static NOINLINE void display_process_list(int lines_rem, int scr_width)
+ 		smart_ulltoa5(s->vsz, vsz_str_buf, " mgtpezy");
+ 		/* PID PPID USER STAT VSZ %VSZ [%CPU] COMMAND */
+ 		col = snprintf(line_buf, scr_width,
+-				"\n" "%5u%6u %-8.8s %s  %.5s" FMT
++				"\n" "  %-5u%-6u %s %.5s   " FMT
+ 				IF_FEATURE_TOP_SMP_PROCESS(" %3d")
+ 				IF_FEATURE_TOP_CPU_USAGE_PERCENTAGE(FMT)
+ 				" ",
+-				s->pid, s->ppid, get_cached_username(s->uid),
++				s->pid, s->ppid,
+ 				s->state, vsz_str_buf,
+ 				SHOW_STAT(pmem)
+ 				IF_FEATURE_TOP_SMP_PROCESS(, s->last_seen_on_cpu)
 diff --git a/shell/ash.c b/shell/ash.c
 index 827643808..d98d58ec9 100644
 --- a/shell/ash.c
@@ -842,6 +1180,26 @@ index 827643808..d98d58ec9 100644
  }
  static int
  dup2_or_raise(int from, int to)
+diff --git a/util-linux/fdisk.c b/util-linux/fdisk.c
+index 1c2a7d683..9004a06d8 100644
+--- a/util-linux/fdisk.c
++++ b/util-linux/fdisk.c
+@@ -2969,6 +2969,7 @@ open_list_and_close(const char *device, int user_specified)
+ static int is_whole_disk(const char *disk)
+ {
+ 	unsigned len;
++	#if 0
+ 	int fd = open(disk, O_RDONLY);
+ 
+ 	if (fd != -1) {
+@@ -2978,6 +2979,7 @@ static int is_whole_disk(const char *disk)
+ 		if (!err)
+ 			return (geometry.start == 0);
+ 	}
++	#endif
+ 
+ 	/* Treat "nameN" as a partition name, not whole disk */
+ 	/* note: mmcblk0 should work from the geometry check above */
 diff --git a/util-linux/fdisk_gpt.c b/util-linux/fdisk_gpt.c
 index 4c30f31f8..a152d3a73 100644
 --- a/util-linux/fdisk_gpt.c

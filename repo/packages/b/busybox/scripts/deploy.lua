@@ -37,4 +37,9 @@ function main(rootfs, installdir)
         local filename = path.filename(filepath)
         rt_utils.cp_with_symlink(filepath, path.join(rootfs, "usr", "sbin", filename))
     end
+
+    for _, filepath in ipairs(os.files(path.join(installdir, "sbin") .. "/*")) do
+        local filename = path.filename(filepath)
+        rt_utils.cp_with_symlink(filepath, path.join(rootfs, "sbin", filename))
+    end
 end
