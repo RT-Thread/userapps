@@ -19,7 +19,8 @@
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
 -- 2023-05-09     xqyjlj       initial version
---
+-- 2024-11-11     rcitach      add version get
+
 import("core.project.config")
 import("core.project.project")
 import("core.base.option")
@@ -69,6 +70,7 @@ function deploy_package(rootfs)
         local repo = instance:repo()
         local packagename = requireinfo.originstr
         local installdir = instance:installdir()
+        local version = instance:version_str()
         local repodir = repo:url()
         local reponame = repo:name()
         if string.find(packagename, "%s") then
@@ -78,7 +80,7 @@ function deploy_package(rootfs)
             path.join(repodir, "packages", packagename:sub(1, 1), packagename, "scripts", "deploy.lua")
         if os.isfile(deploy_script) then
             vprint("run script => '%s'", deploy_script)
-            import("deploy", {rootdir = path.directory(deploy_script)}).main(rootfs, installdir)
+            import("deploy", {rootdir = path.directory(deploy_script)}).main(rootfs, installdir, version)
         end
         local package_rootfs = path.join(repodir, "packages", packagename:sub(1, 1), packagename, "rootfs")
         if os.isdir(package_rootfs) then

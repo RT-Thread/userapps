@@ -22,7 +22,7 @@
 --
 import("rt.rt_utils")
 
-function main(rootfs, installdir)
+function main(rootfs, installdir, version)
     for _, filepath in ipairs(os.files(path.join(installdir, "bin") .. "/*")) do
         local filename = path.filename(filepath)
         rt_utils.cp_with_symlink(filepath, path.join(rootfs, "bin", filename))
@@ -41,5 +41,12 @@ function main(rootfs, installdir)
     for _, filepath in ipairs(os.files(path.join(installdir, "sbin") .. "/*")) do
         local filename = path.filename(filepath)
         rt_utils.cp_with_symlink(filepath, path.join(rootfs, "sbin", filename))
+    end
+
+    for _, filepath in ipairs(os.files(path.join(os.scriptdir():match(".*/"), "port", version) .. "/*")) do
+        if not filepath:match("%.config$") then
+            local filename = path.filename(filepath)
+            rt_utils.cp_with_symlink(filepath, path.join(rootfs, "etc", filename))
+        end
     end
 end
