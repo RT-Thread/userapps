@@ -16,17 +16,9 @@ xmake 是一个基于 Lua 的轻量级跨平台构建工具，使用 xmake.lua �
 
 > 此次以 qemu-virt64-aarch64 为例讲解
 
-1. **克隆仓库**
+1. **安装 xmake**
 
-   将 Smart 的 userapps 仓库克隆下来：
-
-   ```shell
-   git clone https://github.com/RT-Thread/userapps.git
-   ```
-
-2. **安装 xmake**
-
-   请根据[xmake 官方文档](https://xmake.io/#/zh-cn/guide/installation?id=ubuntu)进行安装
+   请根据 [xmake 官方文档](https://xmake.io/#/zh-cn/guide/installation?id=ubuntu) 进行安装。
 
    以下为 ubuntu 安装方式
 
@@ -36,36 +28,58 @@ xmake 是一个基于 Lua 的轻量级跨平台构建工具，使用 xmake.lua �
    sudo apt install xmake
    ```
 
-3. **编译**
+2. **克隆仓库**
 
-   由于 smart 采用 xmake 编译用户态环境，因此 smart 的编译方式非常简单。
-
-   首先运行 env.sh 添加一下环境变量
+   将 Smart 的 userapps 仓库克隆下来, 假定我们的工作路径是 `$WS`：
 
    ```shell
-   source env.sh
+   cd $WS
+   git clone https://github.com/RT-Thread/userapps.git
+   ```
+
+3. **编译用户态应用程序**
+
+   文件系统由多个应用程序组成，这些应用程序都放在 `apps` 目录下。由于 smart 采用 xmake 编译用户态环境，因此 smart 的编译方式非常简单。
+
+   首先进入 userapps 并运行 `env.sh` 添加一下环境变量。
+
+   ```shell
+   cd $WS/userapps
+   source ./env.sh
    ```
 
    进入 apps 目录进行编译
 
    ```shell
    cd apps
-   xmake f -a aarch64 # 配置为 aarch64平台
-   xmake -j8
+   xmake f -a aarch64 # 配置为 aarch64平台，如果不执行该条指令进行配置，则默认为 aarch64
+   xmake -j$(nproc)
    ```
+
+   目前支持的平台：arm、aarch64、riscv64gc。
 
    ![image-20230531173059551](./assets/image-20230531173059551.png)
 
-   支持的平台：arm、aarch64、riscv64gc。
 
-5. **镜像制作**
+4. **制作文件系统**
 
-   运行 `xmake smart-rootfs` 制作 rootfs ，运行 `xmake smart-image` 制作镜像
+   运行 `xmake smart-rootfs` 制作 rootfs，所谓制作文件系统，就是将上一步编译生成的用户程序按照文件系统的布局拷贝到 `$WS/userapps/apps/build/rootfs` 路径下。
 
    ```shell
    xmake smart-rootfs
+   ```
+
+5. **制作镜像**
+
+   运行 `xmake smart-image` 制作镜像，将上一步制作的 `$WS/userapps/apps/build/rootfs` 目录下的文件系统打包生成特定格式的 image 文件。
+
+   ```shell
    xmake smart-image -f ext4 #制作 ext4 镜像
    ```
+
+   目前支持的镜像格式包括 ext4/fat/cromfs。
+
+   这里的例子会在 `$WS/userapps/apps/build` 路径下生成 `ext4.img` 文件。
 
    ![image-20230531173829621](./assets/image-20230531173829621.png)
 
