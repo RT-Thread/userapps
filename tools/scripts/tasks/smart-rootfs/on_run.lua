@@ -133,16 +133,9 @@ function deploy_target(rootfs)
     end
 end
 
-function deploy_syslib(toolchains, rootfs)
+function deploy_syslib(rootfs)
     local sdkdir = rt_utils.sdk_dir()
     local arch = config.arch()
-    local pkg = project:required_packages()[toolchains]
-
-    if string.startswith(toolchains, "riscv64") then
-        toolchains = "riscv64-unknown-smart-musl"
-    end
-
-    toolchains = string.gsub(toolchains, "smart", "linux") -- TODO: should replace, when toolchains renamed
 
     if arch == "arm64" then
         arch = "aarch64"
@@ -152,6 +145,12 @@ function deploy_syslib(toolchains, rootfs)
         arch = "arm/cortex-a"
     elseif arch == "aarch64" then
         arch = "aarch64/cortex-a"
+    elseif arch == "riscv64gc" then
+        arch = "risc-v/rv64gc/lp64"
+    elseif arch == "riscv64gcv" then
+        arch = "risc-v/rv64gcv/lp64"
+    elseif arch == "xuantie" then
+        arch = "risc-v/rv64gc/lp64d"
     end
 
     local rtlibdir = path.join(sdkdir, "rt-thread", "lib", arch)
@@ -164,6 +163,16 @@ function deploy_syslib(toolchains, rootfs)
         local filename = path.filename(filepath)
         rt_utils.cp_with_symlink(filepath, path.join(rootfs, "lib", filename))
     end
+end
+
+function deploy_toolchainlib(toolchains, rootfs)
+    local pkg = project:required_packages()[toolchains]
+
+    if string.startswith(toolchains, "riscv64") then
+        toolchains = "riscv64-unknown-smart-musl"
+    end
+
+    toolchains = string.gsub(toolchains, "smart", "linux") -- TODO: should replace, when toolchains renamed
 
     for _, filepath in ipairs(os.files(path.join(pkg:installdir(), toolchains) .. "/*/lib*.so*")) do
         if path.extension(filepath) ~= ".py" then
@@ -175,6 +184,31 @@ function deploy_syslib(toolchains, rootfs)
     for _, filepath in ipairs(os.files(path.join(pkg:installdir(), toolchains) .. "/*/ld-musl-*.so.*")) do
         local filename = path.filename(filepath)
         rt_utils.cp_with_symlink(filepath, path.join(rootfs, "lib", filename))
+    end
+end
+
+function deploy_xuantietoolchainlib(toolchains, rootfs)
+    local pkg = project:required_packages()[toolchains]
+    local path_root = "sysroot"
+    local lib_path = {
+        "usr/lib64/lp64d",
+        "lib64/lp64d",
+    }
+
+    for _, filepath_lib in ipairs(lib_path) do
+        for _, filepath in ipairs(os.files(path.join(pkg:installdir(), path_root, filepath_lib) .. "/lib*.so*")) do
+            if path.extension(filepath) ~= ".py" then
+                local filename = path.filename(filepath)
+                os.tryrm(path.join(rootfs, "lib", filename))
+                os.vcp(filepath, path.join(rootfs, "lib", filename))
+            end
+        end
+    end
+
+    for _, filepath in ipairs(os.files(path.join(pkg:installdir(), path_root) .. "/*/ld-musl-*.so.*")) do
+        local filename = path.filename(filepath)
+        os.tryrm(path.join(rootfs, "lib", filename))
+        os.vcp(filepath, path.join(rootfs, "lib", filename))
     end
 end
 
@@ -216,7 +250,7 @@ function main()
         local target = project.targets()[targetname]
         local toolchains = string.gsub(target:get("toolchains"), "@", "")
         local rootfs = option.get("output") or rt_utils.rootfs_dir()
-
+        local arch = config.arch()
         if (option.get("no-symlink")) then
             os.setenv("--rt-xmake-no-symlink", "true")
         end
@@ -224,7 +258,14 @@ function main()
         create_rootfs(rootfs)
         deploy_package(rootfs)
         deploy_target(rootfs)
-        deploy_syslib(toolchains, rootfs)
+        deploy_syslib(rootfs)
+
+        if arch == "xuantie" then
+            deploy_xuantietoolchainlib(toolchains, rootfs)
+        else
+            deploy_toolchainlib(toolchains, rootfs)
+        end
+
 
         local size = rt_utils.dirsize(rootfs)
         cprint("${green}> rootfs: %s", rootfs)

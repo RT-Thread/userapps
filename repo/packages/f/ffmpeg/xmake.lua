@@ -66,7 +66,7 @@ do
         if package:config("shared") then
             table.insert(configs, "--enable-shared")
         end
-
+        table.insert(configs, "--disable-doc")
         local buildenvs = import("package.tools.autoconf").buildenvs(package,
                                                                      {ldflags = ldflags, packagedeps = packagedeps})
         import("package.tools.autoconf").configure(package, configs, {envs = buildenvs})

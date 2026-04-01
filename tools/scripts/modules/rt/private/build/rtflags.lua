@@ -69,9 +69,11 @@ function get_sdk()
     elseif arch == "aarch64" then
         arch = "aarch64/cortex-a"
     elseif arch == "riscv64gc" then
-        arch = "risc-v/rv64gc"
+        arch = "risc-v/rv64gc/lp64"
     elseif arch == "riscv64gcv" then
-        arch = "risc-v/rv64gcv"
+        arch = "risc-v/rv64gcv/lp64"
+    elseif arch == "xuantie" then
+        arch = "risc-v/rv64gc/lp64d"
     end
 
     table.insert(cxflags, "-DHAVE_CCONFIG_H")

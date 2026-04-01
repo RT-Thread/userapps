@@ -52,7 +52,8 @@ end
 local archs = {
     aarch64 = "aarch64-smart-musleabi",
     arm = "arm-smart-musleabi",
-    riscv64gc = "riscv64gc-unknown-smart-musl"
+    riscv64gc = "riscv64gc-unknown-smart-musl",
+    xuantie = "xuantie-900-gcc-musl"
 }
 
 if not get_config("target_os") then

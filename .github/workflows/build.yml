@@ -36,6 +36,7 @@ jobs:
           - aarch64
           - arm
           - riscv64gc
+          - xuantie
 
     steps:
       - name: ⬇️ checkout
@@ -44,7 +45,11 @@ jobs:
           submodules: true
 
       - name: ⬇️ install xmake
-        uses: xmake-io/github-action-setup-xmake@v1
+        shell: bash
+        run: |
+          wget -q https://github.com/xmake-io/xmake/releases/download/v2.8.7/xmake-v2.8.7.gz.run
+          sudo chmod 777 ./xmake-v2.8.7.gz.run
+          ./xmake-v2.8.7.gz.run
 
       - name: 👷 build
         shell: bash
@@ -85,7 +90,8 @@ jobs:
           export XMAKE_ROOT=y # Only need to use "--root" in CI
           xmake --version
           source env.sh
-          pushd apps/${{ matrix.app }}
+          pushd apps
+            echo "includes(path.join(path.join(os.scriptdir(), \"${{ matrix.app }}\"), \"xmake.lua\"))" > xmake.lua
             xmake f -a x86_64 --target_os=linux -vyD
             xmake -j$(nproc) -vyD -P .
           popd
